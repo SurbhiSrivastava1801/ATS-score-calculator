@@ -1,0 +1,44 @@
+John Doe
+Software Engineer
+john.doe@email.com | (555) 123-4567 | New York, NY
+
+PROFESSIONAL SUMMARY
+Experienced software engineer with 3+ years of experience in web development.
+Skilled in JavaScript, Python, and React. Strong background in building
+web applications and working with development teams.
+
+TECHNICAL SKILLS
+Programming Languages: JavaScript, Python, Java
+Frameworks: React, Node.js, Express
+Databases: PostgreSQL, MongoDB
+Tools: Git, Docker, AWS
+Methodologies: Agile, Scrum
+
+PROFESSIONAL EXPERIENCE
+
+Software Engineer | TechCorp Inc. | 2021 - Present
+• Developed web applications using React and Node.js
+• Built RESTful APIs and integrated third-party services
+• Participated in Agile development process
+• Improved performance by 30%
+• Mentored 2 junior developers
+
+Junior Developer | StartupXYZ | 2020 - 2021
+• Created user interfaces using HTML, CSS, JavaScript
+• Worked with senior developers on projects
+• Participated in code reviews
+• Gained experience in version control
+
+EDUCATION
+Bachelor of Science in Computer Science
+University of Technology | 2016 - 2020
+GPA: 3.7/4.0
+
+PROJECTS
+E-commerce Platform: Web application with React frontend
+Task Management App: Tool using WebSocket technology
+
+ACHIEVEMENTS
+• Improved team productivity by 25%
+• Reduced bugs by 40%
+• Led successful project delivery

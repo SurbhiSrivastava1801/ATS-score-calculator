@@ -17,33 +17,28 @@ class ATSCalculator {
     initializeEventListeners() {
         const fileInput = document.getElementById('fileInput');
         const uploadArea = document.getElementById('uploadArea');
+        const chooseFileBtn = document.getElementById('chooseFileBtn');
 
-        // Remove any existing event listeners to prevent duplicates
-        fileInput.removeEventListener('change', this.handleFileSelect);
-        uploadArea.removeEventListener('dragover', this.handleDragOver);
-        uploadArea.removeEventListener('dragleave', this.handleDragLeave);
-        uploadArea.removeEventListener('drop', this.handleDrop);
-        uploadArea.removeEventListener('click', this.handleUploadClick);
-
-        // Bind methods to preserve 'this' context
-        this.handleFileSelect = this.handleFileSelect.bind(this);
-        this.handleDragOver = this.handleDragOver.bind(this);
-        this.handleDragLeave = this.handleDragLeave.bind(this);
-        this.handleDrop = this.handleDrop.bind(this);
-        this.handleUploadClick = this.handleUploadClick.bind(this);
-
-        fileInput.addEventListener('change', this.handleFileSelect);
+        // Use arrow functions to preserve 'this' context
+        fileInput.addEventListener('change', (e) => this.handleFileSelect(e));
         
-        uploadArea.addEventListener('dragover', this.handleDragOver);
-        uploadArea.addEventListener('dragleave', this.handleDragLeave);
-        uploadArea.addEventListener('drop', this.handleDrop);
-        uploadArea.addEventListener('click', this.handleUploadClick);
-    }
+        uploadArea.addEventListener('dragover', (e) => this.handleDragOver(e));
+        uploadArea.addEventListener('dragleave', (e) => this.handleDragLeave(e));
+        uploadArea.addEventListener('drop', (e) => this.handleDrop(e));
+        uploadArea.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            fileInput.click();
+        });
 
-    handleUploadClick(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        document.getElementById('fileInput').click();
+        // Handle the Choose File button click
+        if (chooseFileBtn) {
+            chooseFileBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                fileInput.click();
+            });
+        }
     }
 
     handleDragOver(e) {
@@ -66,9 +61,13 @@ class ATSCalculator {
     }
 
     handleFileSelect(e) {
+        console.log('File selected:', e.target.files);
         const file = e.target.files[0];
         if (file) {
+            console.log('Processing file:', file.name, file.type, file.size);
             this.processFile(file);
+        } else {
+            console.log('No file selected');
         }
     }
 
