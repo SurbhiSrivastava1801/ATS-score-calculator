@@ -11,10 +11,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <!-- Mammoth.js for Word document parsing -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
-    <!-- Chart.js for advanced visualizations -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.min.js"></script>
-    <!-- Natural.js for advanced NLP -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/natural/6.5.0/natural.min.js"></script>
 </head>
 <body>
     <div class="container">
@@ -28,12 +24,6 @@
                 <div class="header-controls">
                     <button id="darkModeToggle" class="theme-toggle" onclick="toggleDarkMode()">
                         <i class="fas fa-moon"></i>
-                    </button>
-                    <button id="analyticsToggle" class="feature-toggle" onclick="toggleAnalytics()">
-                        <i class="fas fa-analytics"></i> Analytics
-                    </button>
-                    <button id="builderToggle" class="feature-toggle" onclick="toggleBuilder()">
-                        <i class="fas fa-edit"></i> Builder
                     </button>
                 </div>
             </div>
@@ -98,94 +88,8 @@
                     </div>
                 </div>
 
-                <!-- NEW: Visual Feedback Section -->
-                <div class="visual-feedback-section" id="visualFeedbackSection">
-                    <h3><i class="fas fa-chart-bar"></i> Visual Analysis</h3>
-                    <div class="heatmap-container">
-                        <h4>Section Performance Heatmap</h4>
-                        <div class="heatmap-grid" id="heatmapGrid">
-                            <!-- Heatmap will be generated dynamically -->
-                        </div>
-                    </div>
-                    
-                    <div class="impact-analysis-container">
-                        <h4>Impact Language Analysis</h4>
-                        <div class="impact-chart" id="impactChart">
-                            <!-- Impact analysis will be displayed here -->
-                        </div>
-                    </div>
-                </div>
 
-                <!-- Advanced Analytics Dashboard -->
-                <div class="analytics-dashboard" id="analyticsDashboard" style="display: none;">
-                    <h3><i class="fas fa-analytics"></i> Advanced Analytics Dashboard</h3>
-                    
-                    <div class="analytics-grid">
-                        <div class="analytics-card">
-                            <h4><i class="fas fa-chart-line"></i> Performance Trends</h4>
-                            <canvas id="trendChart" width="400" height="200"></canvas>
-                        </div>
-                        
-                        <div class="analytics-card">
-                            <h4><i class="fas fa-industry"></i> Industry Benchmarking</h4>
-                            <canvas id="benchmarkChart" width="400" height="200"></canvas>
-                        </div>
-                        
-                        <div class="analytics-card">
-                            <h4><i class="fas fa-brain"></i> NLP Analysis</h4>
-                            <div id="nlpAnalysis" class="nlp-analysis"></div>
-                        </div>
-                        
-                        <div class="analytics-card">
-                            <h4><i class="fas fa-robot"></i> ML Insights</h4>
-                            <div id="mlInsights" class="ml-insights"></div>
-                        </div>
-                    </div>
-                </div>
 
-                <!-- Real-time Resume Builder -->
-                <div class="resume-builder" id="resumeBuilder" style="display: none;">
-                    <h3><i class="fas fa-edit"></i> Real-time Resume Builder</h3>
-                    
-                    <div class="builder-container">
-                        <div class="builder-sidebar">
-                            <div class="builder-section">
-                                <h4>Contact Information</h4>
-                                <textarea id="contactInput" placeholder="Enter your contact information..."></textarea>
-                            </div>
-                            
-                            <div class="builder-section">
-                                <h4>Professional Summary</h4>
-                                <textarea id="summaryInput" placeholder="Enter your professional summary..."></textarea>
-                            </div>
-                            
-                            <div class="builder-section">
-                                <h4>Work Experience</h4>
-                                <textarea id="experienceInput" placeholder="Enter your work experience..."></textarea>
-                            </div>
-                            
-                            <div class="builder-section">
-                                <h4>Education</h4>
-                                <textarea id="educationInput" placeholder="Enter your education..."></textarea>
-                            </div>
-                            
-                            <div class="builder-section">
-                                <h4>Skills</h4>
-                                <textarea id="skillsInput" placeholder="Enter your skills..."></textarea>
-                            </div>
-                        </div>
-                        
-                        <div class="builder-preview">
-                            <h4>Live Preview & Score</h4>
-                            <div id="liveScore" class="live-score-display">
-                                <div class="score-circle">
-                                    <span id="liveScoreValue">0</span>%
-                                </div>
-                            </div>
-                            <div id="liveRecommendations" class="live-recommendations"></div>
-                        </div>
-                    </div>
-                </div>
 
                 <!-- Detailed Breakdown -->
                 <div class="breakdown-section">
