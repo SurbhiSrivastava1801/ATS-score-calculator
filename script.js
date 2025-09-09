@@ -928,44 +928,100 @@ function analyzeContactInfo(text) {
     let score = 0;
     const issues = [];
     const suggestions = [];
+    const details = {};
 
-    const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/;
-    if (emailRegex.test(text)) {
-        score += 25;
+    // Enhanced email detection
+    const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
+    const emails = text.match(emailRegex) || [];
+    
+    if (emails.length > 0) {
+        score += 35;
+        details.emails = emails;
+        
+        // Check for professional email domains
+        const professionalDomains = ['gmail.com', 'yahoo.com', 'outlook.com', 'hotmail.com'];
+        const hasProfessionalDomain = emails.some(email => 
+            professionalDomains.some(domain => email.toLowerCase().includes(domain))
+        );
+        
+        if (hasProfessionalDomain) {
+            suggestions.push('Consider using a professional email domain for better credibility');
+        }
     } else {
         issues.push('No email address found');
-        suggestions.push('Include a professional email address');
     }
 
-    const phoneRegex = /\(?([0-9]{3})\)?[-. ]?([0-9]{3})[-. ]?([0-9]{4})/;
-    if (phoneRegex.test(text)) {
-        score += 25;
+    // Enhanced phone number detection
+    const phoneRegex = /\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/g;
+    const phones = text.match(phoneRegex) || [];
+    
+    if (phones.length > 0) {
+        score += 30;
+        details.phones = phones;
+        
+        // Check for consistent formatting
+        const formattedPhones = phones.filter(phone => /\(\d{3}\)\s*\d{3}-\d{4}/.test(phone));
+        if (formattedPhones.length === phones.length) {
+            score += 5; // Bonus for consistent formatting
+        }
     } else {
         issues.push('No phone number found');
-        suggestions.push('Include a phone number');
     }
 
-    const locationKeywords = ['city', 'state', 'address', 'location'];
-    if (locationKeywords.some(keyword => text.toLowerCase().includes(keyword))) {
-        score += 25;
+    // Enhanced LinkedIn detection
+    const linkedinRegex = /linkedin\.com\/in\/[a-zA-Z0-9-]+/gi;
+    const linkedinProfiles = text.match(linkedinRegex) || [];
+    
+    if (linkedinProfiles.length > 0) {
+        score += 20;
+        details.linkedin = linkedinProfiles;
     } else {
-        issues.push('No location information found');
-        suggestions.push('Include your city and state');
+        suggestions.push('Consider adding LinkedIn profile for professional networking');
     }
 
-    if (text.toLowerCase().includes('linkedin') || text.toLowerCase().includes('github') || 
-        text.toLowerCase().includes('portfolio') || text.toLowerCase().includes('website')) {
-        score += 25;
+    // Enhanced location detection
+    const locationPatterns = [
+        /[A-Z][a-z]+,\s*[A-Z]{2}/g, // City, State
+        /[A-Z][a-z]+,\s*[A-Z][a-z]+/g, // City, Country
+        /[A-Z][a-z]+\s+[A-Z]{2}/g // City State
+    ];
+    
+    const locations = [];
+    locationPatterns.forEach(pattern => {
+        const matches = text.match(pattern) || [];
+        locations.push(...matches);
+    });
+    
+    if (locations.length > 0) {
+        score += 10;
+        details.locations = [...new Set(locations)]; // Remove duplicates
     } else {
-        issues.push('No professional profile links found');
-        suggestions.push('Include LinkedIn profile or professional website');
+        suggestions.push('Consider adding location for better local job matching');
+    }
+
+    // Check for additional professional links
+    const githubRegex = /github\.com\/[a-zA-Z0-9-]+/gi;
+    const portfolioRegex = /(portfolio|website|personal)\s*:?\s*https?:\/\/[^\s]+/gi;
+    
+    const githubProfiles = text.match(githubRegex) || [];
+    const portfolioLinks = text.match(portfolioRegex) || [];
+    
+    if (githubProfiles.length > 0) {
+        score += 5;
+        details.github = githubProfiles;
+    }
+    
+    if (portfolioLinks.length > 0) {
+        score += 5;
+        details.portfolio = portfolioLinks;
     }
 
     return {
-        score,
+        score: Math.min(score, 100),
         issues,
         suggestions,
-        description: 'Contact information completeness'
+        description: 'Enhanced contact information completeness and format analysis',
+        details
     };
 }
 
@@ -973,45 +1029,111 @@ function analyzeExperience(text) {
     let score = 0;
     const issues = [];
     const suggestions = [];
+    const details = {};
 
-    if (text.toLowerCase().includes('experience') || text.toLowerCase().includes('employment')) {
-        score += 30;
+    // Enhanced section detection with multiple variations
+    const experienceSectionPatterns = [
+        /experience/i,
+        /employment/i,
+        /work history/i,
+        /professional experience/i,
+        /career history/i,
+        /employment history/i,
+        /work experience/i,
+        /professional background/i
+    ];
+    
+    const hasExperienceSection = experienceSectionPatterns.some(pattern => pattern.test(text));
+    if (hasExperienceSection) {
+        score += 25;
+        details.experienceSection = true;
     } else {
         issues.push('No experience section found');
-        suggestions.push('Include a dedicated Experience or Employment section');
+        suggestions.push('Include a professional experience section with clear heading');
     }
 
-    const jobTitleKeywords = ['engineer', 'manager', 'analyst', 'specialist', 'coordinator', 'director', 'developer'];
-    const hasJobTitles = jobTitleKeywords.some(keyword => text.toLowerCase().includes(keyword));
-    if (hasJobTitles) {
+    // Enhanced job title detection
+    const jobTitlePatterns = [
+        /(senior|junior|lead|principal|staff|associate|entry-level)/i,
+        /(manager|director|vp|ceo|cto|cfo|president)/i,
+        /(engineer|developer|programmer|architect|consultant)/i,
+        /(analyst|specialist|coordinator|administrator|supervisor)/i,
+        /(designer|writer|editor|marketer|sales|account)/i
+    ];
+    
+    const foundJobTitles = jobTitlePatterns.filter(pattern => pattern.test(text));
+    if (foundJobTitles.length >= 2) {
         score += 25;
+        details.jobTitles = foundJobTitles.length;
+    } else if (foundJobTitles.length >= 1) {
+        score += 15;
+        details.jobTitles = foundJobTitles.length;
     } else {
-        issues.push('Job titles not clearly specified');
-        suggestions.push('Clearly state your job titles and roles');
+        issues.push('No clear job titles found');
+        suggestions.push('Include specific job titles and roles (e.g., Senior Software Engineer)');
     }
 
-    const companyKeywords = ['inc', 'corp', 'llc', 'company', 'ltd', 'group'];
-    const hasCompanies = companyKeywords.some(keyword => text.toLowerCase().includes(keyword));
-    if (hasCompanies) {
-        score += 25;
-    } else {
-        issues.push('Company names not clearly specified');
-        suggestions.push('Include company names for each position');
-    }
-
-    const dateRegex = /(19|20)\d{2}/;
-    if (dateRegex.test(text)) {
+    // Enhanced company detection
+    const companyPatterns = [
+        /(inc|corp|llc|ltd|company|technologies|solutions|systems)/i,
+        /(university|college|institute|foundation|organization)/i,
+        /(consulting|group|partners|associates|ventures)/i
+    ];
+    
+    const foundCompanies = companyPatterns.filter(pattern => pattern.test(text));
+    if (foundCompanies.length >= 1) {
         score += 20;
+        details.companies = foundCompanies.length;
     } else {
-        issues.push('Employment dates not found');
-        suggestions.push('Include start and end dates for each position');
+        issues.push('No company names found');
+        suggestions.push('Include company names where you worked');
+    }
+
+    // Enhanced date detection
+    const datePatterns = [
+        /\d{4}\s*-\s*\d{4}/g, // 2020-2023
+        /\d{4}\s*-\s*(present|current)/gi, // 2020-Present
+        /(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\s+\d{4}/gi, // Jan 2020
+        /\d{1,2}\/\d{4}/g // 01/2020
+    ];
+    
+    const foundDates = [];
+    datePatterns.forEach(pattern => {
+        const matches = text.match(pattern) || [];
+        foundDates.push(...matches);
+    });
+    
+    if (foundDates.length >= 2) {
+        score += 20;
+        details.dates = foundDates.length;
+    } else if (foundDates.length >= 1) {
+        score += 10;
+        details.dates = foundDates.length;
+    } else {
+        issues.push('No employment dates found');
+        suggestions.push('Include employment dates for each position');
+    }
+
+    // Check for quantified achievements in experience
+    const quantifiedInExperience = /(increased|decreased|improved|reduced|achieved|delivered|managed|led).*?\d+%/gi;
+    const quantifiedMatches = text.match(quantifiedInExperience) || [];
+    
+    if (quantifiedMatches.length >= 3) {
+        score += 10;
+        details.quantifiedAchievements = quantifiedMatches.length;
+    } else if (quantifiedMatches.length >= 1) {
+        score += 5;
+        details.quantifiedAchievements = quantifiedMatches.length;
+    } else {
+        suggestions.push('Include quantified achievements in your experience (e.g., "increased sales by 30%")');
     }
 
     return {
-        score,
+        score: Math.min(score, 100),
         issues,
         suggestions,
-        description: 'Professional experience presentation'
+        description: 'Enhanced professional experience section analysis',
+        details
     };
 }
 
