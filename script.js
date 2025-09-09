@@ -1009,6 +1009,12 @@ function analyzeNewResume() {
     document.getElementById('fileInput').value = '';
 }
 
+// Test function to verify JavaScript is working
+function testJavaScript() {
+    console.log('JavaScript is working!');
+    alert('JavaScript is working! File upload should work now.');
+}
+
 function downloadReport() {
     const report = generateReport();
     const blob = new Blob([report], { type: 'text/plain' });
@@ -1053,5 +1059,17 @@ function generateReport() {
 
 // Initialize the calculator when the page loads
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOM loaded, initializing ATS Calculator');
     window.atsCalculator = new ATSCalculator();
 });
+
+// Also initialize if DOM is already loaded
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        console.log('DOM loaded, initializing ATS Calculator');
+        window.atsCalculator = new ATSCalculator();
+    });
+} else {
+    console.log('DOM already loaded, initializing ATS Calculator');
+    window.atsCalculator = new ATSCalculator();
+}

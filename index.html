@@ -30,10 +30,15 @@
                         <h3>Upload Your Resume</h3>
                         <p>Drop your resume file here or click to browse</p>
                         <p class="file-types">Supported formats: PDF, DOC, DOCX, TXT</p>
-                        <input type="file" id="fileInput" accept=".pdf,.doc,.docx,.txt" hidden>
-                        <button class="upload-btn" id="chooseFileBtn">
-                            Choose File
-                        </button>
+                        <input type="file" id="fileInput" accept=".pdf,.doc,.docx,.txt" hidden onchange="if(window.atsCalculator) window.atsCalculator.processFile(this.files[0])">
+                        <div class="upload-buttons">
+                            <button class="upload-btn" id="chooseFileBtn" onclick="document.getElementById('fileInput').click()">
+                                Choose File
+                            </button>
+                            <button class="upload-btn test-js-btn" onclick="testJavaScript()" style="background: #28a745;">
+                                Test JavaScript
+                            </button>
+                        </div>
                     </div>
                 </div>
             </section>
