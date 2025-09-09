@@ -1199,6 +1199,599 @@ function analyzeAndDisplay(text) {
     }
 }
 
+// Analysis functions
+function analyzeFormatting(text) {
+    let score = 0;
+    const issues = [];
+    const suggestions = [];
+
+    if (text.includes('\n')) score += 20;
+    else issues.push('No line breaks detected');
+
+    if (text.includes('•') || text.includes('-') || text.includes('*')) score += 20;
+    else {
+        issues.push('No bullet points found');
+        suggestions.push('Use bullet points (•) to list achievements and responsibilities');
+    }
+
+    const lines = text.split('\n');
+    const hasConsistentHeaders = lines.some(line => 
+        line.toUpperCase() === line && line.length > 3 && line.length < 30
+    );
+    if (hasConsistentHeaders) score += 20;
+    else {
+        issues.push('Inconsistent section headers');
+        suggestions.push('Use ALL CAPS for section headers (EXPERIENCE, EDUCATION, etc.)');
+    }
+
+    const hasSections = ['experience', 'education', 'skills'].some(section => 
+        text.toLowerCase().includes(section)
+    );
+    if (hasSections) score += 20;
+    else {
+        issues.push('Missing standard resume sections');
+        suggestions.push('Include standard sections: Experience, Education, Skills');
+    }
+
+    if (!text.includes('{') && !text.includes('}') && !text.includes('[') && !text.includes(']')) {
+        score += 20;
+    } else {
+        issues.push('Contains special characters that may confuse ATS');
+        suggestions.push('Remove special characters like {}, [], and symbols');
+    }
+
+    return {
+        score: Math.min(score, 100),
+        issues,
+        suggestions,
+        description: 'Resume formatting and structure analysis'
+    };
+}
+
+function analyzeKeywords(text) {
+    let score = 0;
+    const issues = [];
+    const suggestions = [];
+
+    const commonKeywords = [
+        'experience', 'skills', 'education', 'achievement', 'leadership',
+        'management', 'communication', 'problem solving', 'teamwork',
+        'project management', 'analytical', 'strategic', 'customer service'
+    ];
+
+    const keywordCount = commonKeywords.filter(keyword => 
+        text.toLowerCase().includes(keyword.toLowerCase())
+    ).length;
+
+    score = Math.min(keywordCount * 7, 100);
+
+    if (keywordCount < 5) {
+        issues.push('Limited use of relevant keywords');
+        suggestions.push('Include more industry-specific keywords and action verbs');
+    }
+
+    return {
+        score,
+        issues,
+        suggestions,
+        description: 'Keyword optimization and relevance analysis'
+    };
+}
+
+function analyzeContactInfo(text) {
+    let score = 0;
+    const issues = [];
+    const suggestions = [];
+
+    const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/;
+    if (emailRegex.test(text)) {
+        score += 25;
+    } else {
+        issues.push('No email address found');
+        suggestions.push('Include a professional email address');
+    }
+
+    const phoneRegex = /\(?([0-9]{3})\)?[-. ]?([0-9]{3})[-. ]?([0-9]{4})/;
+    if (phoneRegex.test(text)) {
+        score += 25;
+    } else {
+        issues.push('No phone number found');
+        suggestions.push('Include a phone number');
+    }
+
+    const locationKeywords = ['city', 'state', 'address', 'location'];
+    if (locationKeywords.some(keyword => text.toLowerCase().includes(keyword))) {
+        score += 25;
+    } else {
+        issues.push('No location information found');
+        suggestions.push('Include your city and state');
+    }
+
+    if (text.toLowerCase().includes('linkedin') || text.toLowerCase().includes('github') || 
+        text.toLowerCase().includes('portfolio') || text.toLowerCase().includes('website')) {
+        score += 25;
+    } else {
+        issues.push('No professional profile links found');
+        suggestions.push('Include LinkedIn profile or professional website');
+    }
+
+    return {
+        score,
+        issues,
+        suggestions,
+        description: 'Contact information completeness'
+    };
+}
+
+function analyzeExperience(text) {
+    let score = 0;
+    const issues = [];
+    const suggestions = [];
+
+    if (text.toLowerCase().includes('experience') || text.toLowerCase().includes('employment')) {
+        score += 30;
+    } else {
+        issues.push('No experience section found');
+        suggestions.push('Include a dedicated Experience or Employment section');
+    }
+
+    const jobTitleKeywords = ['engineer', 'manager', 'analyst', 'specialist', 'coordinator', 'director', 'developer'];
+    const hasJobTitles = jobTitleKeywords.some(keyword => text.toLowerCase().includes(keyword));
+    if (hasJobTitles) {
+        score += 25;
+    } else {
+        issues.push('Job titles not clearly specified');
+        suggestions.push('Clearly state your job titles and roles');
+    }
+
+    const companyKeywords = ['inc', 'corp', 'llc', 'company', 'ltd', 'group'];
+    const hasCompanies = companyKeywords.some(keyword => text.toLowerCase().includes(keyword));
+    if (hasCompanies) {
+        score += 25;
+    } else {
+        issues.push('Company names not clearly specified');
+        suggestions.push('Include company names for each position');
+    }
+
+    const dateRegex = /(19|20)\d{2}/;
+    if (dateRegex.test(text)) {
+        score += 20;
+    } else {
+        issues.push('Employment dates not found');
+        suggestions.push('Include start and end dates for each position');
+    }
+
+    return {
+        score,
+        issues,
+        suggestions,
+        description: 'Professional experience presentation'
+    };
+}
+
+function analyzeEducation(text) {
+    let score = 0;
+    const issues = [];
+    const suggestions = [];
+
+    if (text.toLowerCase().includes('education') || text.toLowerCase().includes('degree')) {
+        score += 40;
+    } else {
+        issues.push('No education section found');
+        suggestions.push('Include an Education section with your degree and institution');
+    }
+
+    const degreeKeywords = ['bachelor', 'master', 'phd', 'associate', 'degree', 'diploma', 'certificate'];
+    const hasDegree = degreeKeywords.some(keyword => text.toLowerCase().includes(keyword));
+    if (hasDegree) {
+        score += 30;
+    } else {
+        issues.push('Degree information not specified');
+        suggestions.push('Specify your degree type and field of study');
+    }
+
+    const institutionKeywords = ['university', 'college', 'institute', 'school'];
+    const hasInstitution = institutionKeywords.some(keyword => text.toLowerCase().includes(keyword));
+    if (hasInstitution) {
+        score += 30;
+    } else {
+        issues.push('Institution name not specified');
+        suggestions.push('Include the name of your educational institution');
+    }
+
+    return {
+        score,
+        issues,
+        suggestions,
+        description: 'Education information completeness'
+    };
+}
+
+function analyzeSkills(text) {
+    let score = 0;
+    const issues = [];
+    const suggestions = [];
+
+    if (text.toLowerCase().includes('skills') || text.toLowerCase().includes('technical')) {
+        score += 40;
+    } else {
+        issues.push('No skills section found');
+        suggestions.push('Include a dedicated Skills or Technical Skills section');
+    }
+
+    const technicalKeywords = ['programming', 'software', 'technology', 'computer', 'system', 'database', 'network'];
+    const hasTechnical = technicalKeywords.some(keyword => text.toLowerCase().includes(keyword));
+    if (hasTechnical) {
+        score += 30;
+    } else {
+        issues.push('Technical skills not highlighted');
+        suggestions.push('List specific technical skills and tools you use');
+    }
+
+    const softSkills = ['communication', 'leadership', 'teamwork', 'problem solving', 'management'];
+    const hasSoftSkills = softSkills.some(skill => text.toLowerCase().includes(skill));
+    if (hasSoftSkills) {
+        score += 30;
+    } else {
+        issues.push('Soft skills not mentioned');
+        suggestions.push('Include relevant soft skills like communication and leadership');
+    }
+
+    return {
+        score,
+        issues,
+        suggestions,
+        description: 'Skills and competencies presentation'
+    };
+}
+
+function analyzeLength(text) {
+    let score = 0;
+    const issues = [];
+    const suggestions = [];
+    const wordCount = text.split(/\s+/).length;
+
+    if (wordCount >= 300 && wordCount <= 800) {
+        score = 100;
+    } else if (wordCount >= 200 && wordCount < 300) {
+        score = 80;
+        issues.push('Resume may be too short');
+        suggestions.push('Add more details about your achievements and responsibilities');
+    } else if (wordCount > 800 && wordCount <= 1200) {
+        score = 70;
+        issues.push('Resume may be too long');
+        suggestions.push('Consider condensing content to 1-2 pages');
+    } else if (wordCount > 1200) {
+        score = 40;
+        issues.push('Resume is too long for ATS systems');
+        suggestions.push('Keep resume to 1-2 pages maximum');
+    } else {
+        score = 30;
+        issues.push('Resume is too short');
+        suggestions.push('Add more comprehensive information about your experience');
+    }
+
+    return {
+        score,
+        issues,
+        suggestions,
+        description: `Resume length analysis (${wordCount} words)`
+    };
+}
+
+function analyzeAchievements(text) {
+    let score = 0;
+    const issues = [];
+    const suggestions = [];
+
+    const numberRegex = /\d+[%$]|\d+\+|\d+x|\d+%|\$\d+/;
+    if (numberRegex.test(text)) {
+        score += 40;
+    } else {
+        issues.push('No quantified achievements found');
+        suggestions.push('Include specific numbers, percentages, and metrics');
+    }
+
+    const actionVerbs = ['achieved', 'increased', 'decreased', 'improved', 'developed', 'created', 'managed', 'led', 'implemented', 'optimized'];
+    const hasActionVerbs = actionVerbs.some(verb => text.toLowerCase().includes(verb));
+    if (hasActionVerbs) {
+        score += 30;
+    } else {
+        issues.push('Limited use of action verbs');
+        suggestions.push('Start bullet points with strong action verbs');
+    }
+
+    const resultsKeywords = ['result', 'outcome', 'impact', 'success', 'growth', 'efficiency', 'productivity'];
+    const hasResults = resultsKeywords.some(keyword => text.toLowerCase().includes(keyword));
+    if (hasResults) {
+        score += 30;
+    } else {
+        issues.push('Results not clearly highlighted');
+        suggestions.push('Focus on results and impact of your work');
+    }
+
+    return {
+        score,
+        issues,
+        suggestions,
+        description: 'Achievement and impact presentation'
+    };
+}
+
+function generateRecommendations(breakdown, overallScore) {
+    const recommendations = [];
+
+    if (overallScore < 70) {
+        recommendations.push({
+            title: 'Major Improvements Needed',
+            description: 'Your resume needs significant improvements to pass ATS screening. Focus on formatting, keywords, and content structure.',
+            priority: 'high'
+        });
+    } else if (overallScore < 85) {
+        recommendations.push({
+            title: 'Good Foundation, Room for Improvement',
+            description: 'Your resume has a solid foundation but can be optimized further to reach 95%+ ATS score.',
+            priority: 'medium'
+        });
+    } else if (overallScore < 95) {
+        recommendations.push({
+            title: 'Almost There!',
+            description: 'Your resume is well-optimized. Make a few targeted improvements to reach the 95%+ threshold.',
+            priority: 'low'
+        });
+    }
+
+    Object.entries(breakdown).forEach(([category, data]) => {
+        if (data.score < 70) {
+            recommendations.push({
+                title: `Improve ${category.charAt(0).toUpperCase() + category.slice(1)}`,
+                description: data.suggestions.join(' '),
+                priority: 'high'
+            });
+        }
+    });
+
+    recommendations.push({
+        title: 'Optimize for 95%+ ATS Score',
+        description: 'Use ATS-friendly fonts (Arial, Calibri), include relevant keywords from job descriptions, quantify achievements with numbers, and ensure consistent formatting throughout.',
+        priority: 'medium'
+    });
+
+    return recommendations;
+}
+
+function analyzeIndustryKeywords(text) {
+    const industryKeywords = {
+        'software': ['programming', 'development', 'coding', 'software engineering', 'algorithms', 'data structures', 'API', 'database', 'frontend', 'backend', 'full-stack', 'JavaScript', 'Python', 'Java', 'React', 'Node.js', 'Git', 'Agile', 'DevOps', 'cloud computing', 'machine learning', 'AI'],
+        'marketing': ['digital marketing', 'SEO', 'SEM', 'social media', 'content marketing', 'brand management', 'analytics', 'campaign management', 'lead generation', 'conversion optimization', 'email marketing', 'PPC', 'Google Analytics', 'HubSpot', 'Salesforce'],
+        'finance': ['financial analysis', 'budgeting', 'forecasting', 'risk management', 'investment', 'portfolio management', 'compliance', 'auditing', 'accounting', 'financial modeling', 'Excel', 'SAP', 'QuickBooks', 'GAAP', 'IFRS'],
+        'healthcare': ['patient care', 'medical', 'healthcare', 'clinical', 'diagnosis', 'treatment', 'HIPAA', 'EMR', 'EHR', 'pharmaceutical', 'nursing', 'physician', 'healthcare administration'],
+        'general': ['leadership', 'management', 'communication', 'problem solving', 'teamwork', 'project management', 'analytical', 'strategic planning', 'customer service', 'sales', 'negotiation', 'presentation', 'Microsoft Office', 'Excel', 'PowerPoint', 'Word']
+    };
+
+    const analysis = {};
+    
+    Object.entries(industryKeywords).forEach(([industry, keywords]) => {
+        const foundKeywords = keywords.filter(keyword => 
+            text.toLowerCase().includes(keyword.toLowerCase())
+        );
+        
+        analysis[industry] = {
+            total: keywords.length,
+            found: foundKeywords.length,
+            percentage: Math.round((foundKeywords.length / keywords.length) * 100),
+            keywords: foundKeywords,
+            missing: keywords.filter(keyword => 
+                !text.toLowerCase().includes(keyword.toLowerCase())
+            )
+        };
+    });
+
+    return analysis;
+}
+
+function getCalculationProcess(breakdown, overallScore) {
+    const process = [];
+    Object.entries(breakdown).forEach(([category, data]) => {
+        process.push({
+            category: data.description,
+            score: data.score,
+            weight: '12.5%',
+            contribution: Math.round((data.score * 12.5) / 100)
+        });
+    });
+    
+    process.push({
+        category: 'Overall ATS Score',
+        score: overallScore,
+        weight: '100%',
+        contribution: overallScore
+    });
+
+    return process;
+}
+
+function displayResults(analysis) {
+    // Hide loading
+    document.getElementById('loadingOverlay').style.display = 'none';
+    
+    // Hide upload section and show analysis
+    document.getElementById('uploadSection').style.display = 'none';
+    document.getElementById('analysisSection').style.display = 'block';
+    document.getElementById('analysisSection').classList.add('fade-in');
+
+    // Update overall score
+    updateOverallScore(analysis.overallScore);
+    
+    // Display breakdown
+    displayBreakdown(analysis.breakdown);
+    
+    // Display recommendations
+    displayRecommendations(analysis.recommendations);
+    
+    // Display keyword analysis
+    displayKeywordAnalysis(analysis.keywords);
+    
+    // Display calculation process
+    displayCalculationProcess(analysis.calculationProcess);
+}
+
+function updateOverallScore(score) {
+    const scoreElement = document.getElementById('overallScore');
+    const titleElement = document.getElementById('scoreTitle');
+    const descriptionElement = document.getElementById('scoreDescription');
+
+    // Animate score
+    let currentScore = 0;
+    const increment = score / 50;
+    const timer = setInterval(() => {
+        currentScore += increment;
+        if (currentScore >= score) {
+            currentScore = score;
+            clearInterval(timer);
+        }
+        scoreElement.textContent = Math.round(currentScore);
+        
+        // Update score circle
+        const scoreCircle = document.querySelector('.score-circle');
+        const angle = (currentScore / 100) * 360;
+        scoreCircle.style.setProperty('--score-angle', `${angle}deg`);
+    }, 30);
+
+    // Update title and description
+    if (score >= 95) {
+        titleElement.textContent = 'Excellent ATS Score!';
+        descriptionElement.textContent = 'Your resume is highly optimized for ATS systems and should pass through most screening processes.';
+    } else if (score >= 85) {
+        titleElement.textContent = 'Good ATS Score';
+        descriptionElement.textContent = 'Your resume is well-optimized but can be improved further to reach the 95%+ threshold.';
+    } else if (score >= 70) {
+        titleElement.textContent = 'Fair ATS Score';
+        descriptionElement.textContent = 'Your resume needs improvements to consistently pass ATS screening.';
+    } else {
+        titleElement.textContent = 'Poor ATS Score';
+        descriptionElement.textContent = 'Your resume requires significant improvements to pass ATS systems.';
+    }
+}
+
+function displayBreakdown(breakdown) {
+    const grid = document.getElementById('breakdownGrid');
+    grid.innerHTML = '';
+
+    Object.entries(breakdown).forEach(([category, data]) => {
+        const item = document.createElement('div');
+        item.className = 'breakdown-item slide-up';
+        
+        let scoreClass = 'poor';
+        if (data.score >= 85) scoreClass = 'excellent';
+        else if (data.score >= 70) scoreClass = 'good';
+
+        item.innerHTML = `
+            <div class="breakdown-header">
+                <div class="breakdown-title">${data.description}</div>
+                <div class="breakdown-score ${scoreClass}">${data.score}%</div>
+            </div>
+            <div class="breakdown-description">
+                ${data.issues.length > 0 ? 
+                    `<strong>Issues:</strong> ${data.issues.join(', ')}<br>` : 
+                    '<strong>Status:</strong> Good'
+                }
+                ${data.suggestions.length > 0 ? 
+                    `<strong>Suggestions:</strong> ${data.suggestions.join(' ')}` : 
+                    ''
+                }
+            </div>
+        `;
+        
+        grid.appendChild(item);
+    });
+}
+
+function displayRecommendations(recommendations) {
+    const container = document.getElementById('recommendationsContainer');
+    container.innerHTML = '';
+
+    recommendations.forEach((rec, index) => {
+        const item = document.createElement('div');
+        item.className = 'recommendation-item slide-up';
+        item.style.animationDelay = `${index * 0.1}s`;
+        
+        item.innerHTML = `
+            <div class="recommendation-icon">
+                <i class="fas fa-lightbulb"></i>
+            </div>
+            <div class="recommendation-content">
+                <h4>${rec.title}</h4>
+                <p>${rec.description}</p>
+            </div>
+        `;
+        
+        container.appendChild(item);
+    });
+}
+
+function displayKeywordAnalysis(keywords) {
+    const container = document.getElementById('keywordAnalysis');
+    container.innerHTML = '';
+
+    Object.entries(keywords).forEach(([industry, data]) => {
+        const category = document.createElement('div');
+        category.className = 'keyword-category';
+        
+        category.innerHTML = `
+            <h4>${industry.charAt(0).toUpperCase() + industry.slice(1)} Keywords (${data.percentage}% match)</h4>
+            <div class="keyword-tags">
+                ${data.keywords.map(keyword => 
+                    `<span class="keyword-tag present">${keyword}</span>`
+                ).join('')}
+                ${data.missing.slice(0, 5).map(keyword => 
+                    `<span class="keyword-tag missing">${keyword}</span>`
+                ).join('')}
+            </div>
+        `;
+        
+        container.appendChild(category);
+    });
+}
+
+function displayCalculationProcess(process) {
+    const table = document.getElementById('calculationTable');
+    table.innerHTML = `
+        <table>
+            <thead>
+                <tr>
+                    <th>Category</th>
+                    <th>Score</th>
+                    <th>Weight</th>
+                    <th>Contribution</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${process.filter(item => item.category !== 'Overall ATS Score').map(item => {
+                    let scoreClass = 'score-poor';
+                    if (item.score >= 85) scoreClass = 'score-excellent';
+                    else if (item.score >= 70) scoreClass = 'score-good';
+                    
+                    return `
+                        <tr>
+                            <td>${item.category}</td>
+                            <td class="score-cell ${scoreClass}">${item.score}%</td>
+                            <td class="weight-cell">${item.weight}</td>
+                            <td class="contribution-cell">${item.contribution}%</td>
+                        </tr>
+                    `;
+                }).join('')}
+                <tr style="border-top: 2px solid #667eea; background: #f0f2ff;">
+                    <td><strong>Overall ATS Score</strong></td>
+                    <td class="score-cell score-excellent"><strong>${process.find(p => p.category === 'Overall ATS Score').score}%</strong></td>
+                    <td class="weight-cell"><strong>100%</strong></td>
+                    <td class="contribution-cell"><strong>${process.find(p => p.category === 'Overall ATS Score').score}%</strong></td>
+                </tr>
+            </tbody>
+        </table>
+    `;
+}
+
 function testWithSampleResume() {
     const sampleResume = `Sarah Johnson
 Senior Software Engineer
