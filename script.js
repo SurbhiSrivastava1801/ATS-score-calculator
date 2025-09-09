@@ -10,8 +10,29 @@ function handleFileSelect(input) {
         // Show loading
         document.getElementById('loadingOverlay').style.display = 'flex';
         
+        // Show job description upload option
+        document.getElementById('jdUploadContainer').style.display = 'block';
+        
         // Process the file
         processFileDirectly(file);
+    }
+}
+
+function handleJDSelect(input) {
+    const file = input.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const jdText = e.target.result;
+            // Store job description for comparison
+            window.currentJobDescription = jdText;
+            
+            // Re-analyze resume with job description
+            if (window.currentResumeText) {
+                analyzeResumeWithJD(window.currentResumeText, jdText);
+            }
+        };
+        reader.readAsText(file);
     }
 }
 
@@ -604,6 +625,9 @@ ACHIEVEMENTS
 
 function analyzeAndDisplay(text, filename = 'resume', fileType = 'text/plain') {
     try {
+        // Store current resume text for JD comparison
+        window.currentResumeText = text;
+        
         // Enhanced analysis with file context
         const analysis = {
             overallScore: 0,
@@ -789,69 +813,78 @@ function analyzeFormatting(text) {
     };
 }
 
-function analyzeKeywords(text) {
+function analyzeKeywords(text, jobDescription = null) {
     let score = 0;
     const issues = [];
     const suggestions = [];
     const details = {};
 
-    // Enhanced action verb analysis
-    const actionVerbs = {
-        'leadership': ['led', 'managed', 'directed', 'supervised', 'mentored', 'coached', 'guided'],
-        'achievement': ['achieved', 'accomplished', 'delivered', 'completed', 'exceeded', 'surpassed'],
-        'creation': ['created', 'developed', 'designed', 'built', 'established', 'founded', 'launched'],
-        'improvement': ['improved', 'optimized', 'enhanced', 'increased', 'reduced', 'streamlined', 'accelerated'],
-        'collaboration': ['collaborated', 'partnered', 'coordinated', 'facilitated', 'supported', 'assisted'],
-        'technical': ['implemented', 'integrated', 'configured', 'deployed', 'maintained', 'troubleshot']
+    // Advanced contextual keyword extraction
+    const contextualAnalysis = extractContextualKeywords(text);
+    const weightedScore = calculateWeightedKeywordScore(text, jobDescription);
+    const distributionAnalysis = analyzeKeywordDistribution(text);
+    const synonymMatches = findSynonymMatches(text);
+
+    // Combine all keyword analysis results
+    score = Math.round((contextualAnalysis.score + weightedScore.score + distributionAnalysis.score + synonymMatches.score) / 4);
+
+    // Enhanced action verb analysis with bigrams/trigrams
+    const actionVerbPhrases = {
+        'leadership': ['led team', 'managed team', 'directed team', 'supervised team', 'mentored team', 'coached team', 'guided team', 'led project', 'managed project', 'directed project'],
+        'achievement': ['achieved results', 'accomplished goals', 'delivered project', 'completed project', 'exceeded expectations', 'surpassed targets', 'achieved success', 'delivered results'],
+        'creation': ['created solution', 'developed application', 'designed system', 'built platform', 'established process', 'founded company', 'launched product', 'created program'],
+        'improvement': ['improved performance', 'optimized process', 'enhanced system', 'increased efficiency', 'reduced costs', 'streamlined workflow', 'accelerated development', 'improved quality'],
+        'collaboration': ['collaborated with', 'partnered with', 'coordinated with', 'facilitated meeting', 'supported team', 'assisted team', 'worked with', 'teamed with'],
+        'technical': ['implemented solution', 'integrated system', 'configured server', 'deployed application', 'maintained system', 'troubleshot issues', 'debugged code', 'optimized database']
     };
     
-    const foundVerbs = {};
-    let totalVerbs = 0;
+    const foundVerbPhrases = {};
+    let totalVerbPhrases = 0;
     
-    Object.entries(actionVerbs).forEach(([category, verbs]) => {
-        const found = verbs.filter(verb => text.toLowerCase().includes(verb));
-        foundVerbs[category] = found;
-        totalVerbs += found.length;
+    Object.entries(actionVerbPhrases).forEach(([category, phrases]) => {
+        const found = phrases.filter(phrase => text.toLowerCase().includes(phrase));
+        foundVerbPhrases[category] = found;
+        totalVerbPhrases += found.length;
     });
     
-    if (totalVerbs >= 10) score += 25;
-    else if (totalVerbs >= 7) score += 20;
-    else if (totalVerbs >= 4) score += 15;
-    else if (totalVerbs >= 2) score += 10;
+    if (totalVerbPhrases >= 8) score += 20;
+    else if (totalVerbPhrases >= 5) score += 15;
+    else if (totalVerbPhrases >= 3) score += 10;
+    else if (totalVerbPhrases >= 1) score += 5;
     else {
-        issues.push('Limited action verbs found');
-        suggestions.push('Use strong action verbs like "developed", "created", "implemented", "managed", "led"');
+        issues.push('Limited contextual action phrases found');
+        suggestions.push('Use specific action phrases like "led team", "developed application", "improved performance"');
     }
 
-    // Enhanced industry keyword analysis
+    // Enhanced industry keyword analysis with weighted scoring
     const industryKeywords = {
-        'programming': ['javascript', 'python', 'java', 'typescript', 'go', 'rust', 'c++', 'c#', 'php', 'ruby'],
-        'frameworks': ['react', 'angular', 'vue', 'node.js', 'express', 'django', 'spring', 'laravel', 'rails'],
-        'databases': ['mysql', 'postgresql', 'mongodb', 'redis', 'elasticsearch', 'dynamodb', 'cassandra'],
-        'cloud': ['aws', 'azure', 'gcp', 'docker', 'kubernetes', 'terraform', 'jenkins', 'ci/cd'],
-        'tools': ['git', 'github', 'gitlab', 'jira', 'confluence', 'slack', 'figma', 'postman'],
-        'methodologies': ['agile', 'scrum', 'devops', 'tdd', 'bdd', 'microservices', 'api', 'rest', 'graphql']
+        'programming': { keywords: ['javascript', 'python', 'java', 'typescript', 'go', 'rust', 'c++', 'c#', 'php', 'ruby'], weight: 3 },
+        'frameworks': { keywords: ['react', 'angular', 'vue', 'node.js', 'express', 'django', 'spring', 'laravel', 'rails'], weight: 3 },
+        'databases': { keywords: ['mysql', 'postgresql', 'mongodb', 'redis', 'elasticsearch', 'dynamodb', 'cassandra'], weight: 2 },
+        'cloud': { keywords: ['aws', 'azure', 'gcp', 'docker', 'kubernetes', 'terraform', 'jenkins', 'ci/cd'], weight: 3 },
+        'tools': { keywords: ['git', 'github', 'gitlab', 'jira', 'confluence', 'slack', 'figma', 'postman'], weight: 1 },
+        'methodologies': { keywords: ['agile', 'scrum', 'devops', 'tdd', 'bdd', 'microservices', 'api', 'rest', 'graphql'], weight: 2 }
     };
     
     const foundKeywords = {};
-    let totalKeywords = 0;
+    let weightedKeywordScore = 0;
     
-    Object.entries(industryKeywords).forEach(([category, keywords]) => {
-        const found = keywords.filter(keyword => text.toLowerCase().includes(keyword));
+    Object.entries(industryKeywords).forEach(([category, data]) => {
+        const found = data.keywords.filter(keyword => text.toLowerCase().includes(keyword));
         foundKeywords[category] = found;
-        totalKeywords += found.length;
+        weightedKeywordScore += found.length * data.weight;
     });
     
-    if (totalKeywords >= 12) score += 25;
-    else if (totalKeywords >= 8) score += 20;
-    else if (totalKeywords >= 5) score += 15;
-    else if (totalKeywords >= 3) score += 10;
+    if (weightedKeywordScore >= 30) score += 25;
+    else if (weightedKeywordScore >= 20) score += 20;
+    else if (weightedKeywordScore >= 15) score += 15;
+    else if (weightedKeywordScore >= 10) score += 10;
     else {
-        issues.push('Limited industry keywords');
-        suggestions.push('Include relevant technical keywords for your industry and role');
+        issues.push('Limited weighted industry keywords');
+        suggestions.push('Include more high-value technical keywords for your industry and role');
     }
 
-    // Enhanced quantified achievements analysis
+    // Enhanced quantified achievements analysis with sentence-level extraction
     const quantifiedPatterns = {
         'percentages': /\d+%/g,
         'numbers': /\d+\+/g,
@@ -880,22 +913,23 @@ function analyzeKeywords(text) {
 
     // Skills section analysis
     const skillsSection = /skills?|technical|technologies?|competencies?/i.test(text);
-    if (skillsSection) score += 15;
+    if (skillsSection) score += 10;
     else {
         issues.push('No skills section found');
         suggestions.push('Include a dedicated skills or technical section');
     }
 
-    // Keyword density analysis
+    // Advanced keyword density and distribution analysis
     const wordCount = text.split(/\s+/).length;
-    const keywordDensity = (totalKeywords / wordCount) * 100;
+    const keywordDensity = (Object.values(foundKeywords).flat().length / wordCount) * 100;
+    const distributionScore = distributionAnalysis.score;
     
-    if (keywordDensity >= 3) score += 10;
-    else if (keywordDensity >= 2) score += 8;
-    else if (keywordDensity >= 1) score += 5;
+    if (keywordDensity >= 3 && distributionScore >= 80) score += 10;
+    else if (keywordDensity >= 2 && distributionScore >= 60) score += 8;
+    else if (keywordDensity >= 1 && distributionScore >= 40) score += 5;
     else {
-        issues.push('Low keyword density');
-        suggestions.push('Increase the number of relevant keywords while maintaining readability');
+        issues.push('Poor keyword distribution');
+        suggestions.push('Distribute keywords naturally throughout your resume, not just in skills section');
     }
 
     // Check for keyword repetition (over-optimization)
@@ -909,17 +943,25 @@ function analyzeKeywords(text) {
         score -= 5;
     }
 
-    details.actionVerbs = foundVerbs;
+    // Add synonym match suggestions
+    if (synonymMatches.missing.length > 0) {
+        suggestions.push(`Consider adding related terms: ${synonymMatches.missing.slice(0, 3).join(', ')}`);
+    }
+
+    details.actionVerbPhrases = foundVerbPhrases;
     details.industryKeywords = foundKeywords;
     details.quantifiedAchievements = quantifiedResults;
     details.keywordDensity = keywordDensity;
-    details.repeatedKeywords = repeatedKeywords;
+    details.keywordDistribution = distributionAnalysis;
+    details.synonymMatches = synonymMatches;
+    details.weightedScore = weightedKeywordScore;
+    details.contextualAnalysis = contextualAnalysis;
 
     return {
         score: Math.max(0, Math.min(score, 100)),
         issues,
         suggestions,
-        description: 'Enhanced keyword optimization and industry relevance analysis',
+        description: 'Advanced contextual keyword optimization and industry relevance analysis',
         details
     };
 }
@@ -2048,3 +2090,489 @@ function initializeDarkMode() {
 
 // Initialize when page loads
 document.addEventListener('DOMContentLoaded', initializeDarkMode);
+
+// Advanced Keyword Analysis Functions
+
+function extractContextualKeywords(text) {
+    // Extract bigrams and trigrams for contextual keyword matching
+    const words = text.toLowerCase().split(/\s+/);
+    const bigrams = [];
+    const trigrams = [];
+    
+    // Generate bigrams
+    for (let i = 0; i < words.length - 1; i++) {
+        bigrams.push(`${words[i]} ${words[i + 1]}`);
+    }
+    
+    // Generate trigrams
+    for (let i = 0; i < words.length - 2; i++) {
+        trigrams.push(`${words[i]} ${words[i + 1]} ${words[i + 2]}`);
+    }
+    
+    // Define important contextual phrases
+    const contextualPhrases = {
+        'project management': ['project management', 'project planning', 'project coordination', 'project delivery'],
+        'data analysis': ['data analysis', 'data analytics', 'data processing', 'data visualization'],
+        'machine learning': ['machine learning', 'ml models', 'ai development', 'artificial intelligence'],
+        'cloud computing': ['cloud computing', 'cloud architecture', 'cloud deployment', 'cloud infrastructure'],
+        'software development': ['software development', 'application development', 'web development', 'mobile development'],
+        'team leadership': ['team leadership', 'team management', 'team building', 'team coordination'],
+        'quality assurance': ['quality assurance', 'qa testing', 'test automation', 'quality control'],
+        'business analysis': ['business analysis', 'requirements analysis', 'process improvement', 'business intelligence']
+    };
+    
+    let contextualScore = 0;
+    const foundPhrases = {};
+    
+    Object.entries(contextualPhrases).forEach(([category, phrases]) => {
+        const found = phrases.filter(phrase => 
+            bigrams.includes(phrase) || trigrams.includes(phrase) || text.toLowerCase().includes(phrase)
+        );
+        foundPhrases[category] = found;
+        contextualScore += found.length * 5; // 5 points per contextual phrase
+    });
+    
+    return {
+        score: Math.min(contextualScore, 100),
+        foundPhrases,
+        bigrams: bigrams.slice(0, 20), // Sample of bigrams
+        trigrams: trigrams.slice(0, 20) // Sample of trigrams
+    };
+}
+
+function calculateWeightedKeywordScore(text, jobDescription = null) {
+    // Define keyword weights (higher = more important)
+    const keywordWeights = {
+        // High-value technical skills
+        'python': 5, 'javascript': 5, 'java': 5, 'react': 5, 'aws': 5, 'docker': 5,
+        'kubernetes': 5, 'machine learning': 5, 'ai': 4, 'data science': 4,
+        
+        // Medium-value skills
+        'sql': 3, 'git': 3, 'agile': 3, 'scrum': 3, 'api': 3, 'rest': 3,
+        'microservices': 3, 'devops': 3, 'ci/cd': 3, 'testing': 3,
+        
+        // Lower-value but still important
+        'excel': 1, 'powerpoint': 1, 'word': 1, 'office': 1, 'email': 1
+    };
+    
+    let weightedScore = 0;
+    const foundKeywords = {};
+    const missingKeywords = [];
+    
+    Object.entries(keywordWeights).forEach(([keyword, weight]) => {
+        if (text.toLowerCase().includes(keyword.toLowerCase())) {
+            weightedScore += weight;
+            foundKeywords[keyword] = weight;
+        } else {
+            missingKeywords.push({ keyword, weight });
+        }
+    });
+    
+    // If job description provided, prioritize JD keywords
+    if (jobDescription) {
+        const jdKeywords = extractKeywordsFromJD(jobDescription);
+        jdKeywords.forEach(jdKeyword => {
+            if (text.toLowerCase().includes(jdKeyword.toLowerCase())) {
+                weightedScore += 10; // Bonus for JD keyword matches
+            }
+        });
+    }
+    
+    return {
+        score: Math.min(weightedScore, 100),
+        foundKeywords,
+        missingKeywords: missingKeywords.sort((a, b) => b.weight - a.weight).slice(0, 10),
+        totalWeight: Object.values(keywordWeights).reduce((sum, weight) => sum + weight, 0)
+    };
+}
+
+function analyzeKeywordDistribution(text) {
+    const sections = text.split(/\n\s*\n/);
+    const keywordDensity = {};
+    const allKeywords = ['javascript', 'python', 'java', 'react', 'aws', 'docker', 'kubernetes', 'sql', 'git', 'agile'];
+    
+    let distributionScore = 0;
+    const sectionAnalysis = [];
+    
+    sections.forEach((section, index) => {
+        const sectionKeywords = allKeywords.filter(keyword => 
+            section.toLowerCase().includes(keyword)
+        );
+        
+        sectionAnalysis.push({
+            sectionIndex: index,
+            keywords: sectionKeywords,
+            keywordCount: sectionKeywords.length,
+            wordCount: section.split(/\s+/).length
+        });
+        
+        if (sectionKeywords.length > 0) {
+            distributionScore += 10; // Points for having keywords in each section
+        }
+    });
+    
+    // Check for natural distribution (not all keywords in one section)
+    const totalKeywords = allKeywords.filter(keyword => text.toLowerCase().includes(keyword)).length;
+    const sectionsWithKeywords = sectionAnalysis.filter(section => section.keywords.length > 0).length;
+    
+    if (sectionsWithKeywords >= 3 && totalKeywords >= 5) {
+        distributionScore += 20; // Bonus for good distribution
+    }
+    
+    return {
+        score: Math.min(distributionScore, 100),
+        sectionAnalysis,
+        totalKeywords,
+        sectionsWithKeywords,
+        distributionQuality: sectionsWithKeywords >= 3 ? 'Good' : 'Needs Improvement'
+    };
+}
+
+function findSynonymMatches(text) {
+    // Define synonym groups
+    const synonymGroups = {
+        'programming': ['coding', 'development', 'programming', 'software engineering'],
+        'data': ['data', 'information', 'analytics', 'insights'],
+        'management': ['management', 'leadership', 'supervision', 'coordination'],
+        'analysis': ['analysis', 'evaluation', 'assessment', 'review'],
+        'improvement': ['improvement', 'enhancement', 'optimization', 'betterment'],
+        'collaboration': ['collaboration', 'teamwork', 'cooperation', 'partnership'],
+        'communication': ['communication', 'presentation', 'reporting', 'documentation'],
+        'problem solving': ['problem solving', 'troubleshooting', 'debugging', 'resolution']
+    };
+    
+    let synonymScore = 0;
+    const foundSynonyms = {};
+    const missingSynonyms = [];
+    
+    Object.entries(synonymGroups).forEach(([group, synonyms]) => {
+        const found = synonyms.filter(synonym => text.toLowerCase().includes(synonym));
+        if (found.length > 0) {
+            synonymScore += found.length * 3; // 3 points per synonym found
+            foundSynonyms[group] = found;
+        } else {
+            missingSynonyms.push(group);
+        }
+    });
+    
+    return {
+        score: Math.min(synonymScore, 100),
+        foundSynonyms,
+        missing: missingSynonyms,
+        totalGroups: Object.keys(synonymGroups).length,
+        coverage: (Object.keys(foundSynonyms).length / Object.keys(synonymGroups).length) * 100
+    };
+}
+
+function extractKeywordsFromJD(jobDescription) {
+    // Extract important keywords from job description
+    const commonJDKeywords = [
+        'required', 'must have', 'essential', 'preferred', 'experience with',
+        'knowledge of', 'familiar with', 'proficient in', 'expert in'
+    ];
+    
+    const keywords = [];
+    const sentences = jobDescription.split(/[.!?]+/);
+    
+    sentences.forEach(sentence => {
+        commonJDKeywords.forEach(phrase => {
+            if (sentence.toLowerCase().includes(phrase)) {
+                // Extract the technology/skill mentioned after the phrase
+                const match = sentence.match(new RegExp(`${phrase}\\s+([^,.]{2,30})`, 'i'));
+                if (match && match[1]) {
+                    keywords.push(match[1].trim());
+                }
+            }
+        });
+    });
+    
+    return [...new Set(keywords)]; // Remove duplicates
+}
+
+// Named Entity Recognition (Simplified)
+function extractNamedEntities(text) {
+    const entities = {
+        organizations: [],
+        dates: [],
+        degrees: [],
+        jobTitles: [],
+        locations: []
+    };
+    
+    // Extract organizations
+    const orgPatterns = [
+        /([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)\s+(?:Inc|Corp|LLC|Ltd|Company|Technologies|Solutions|Systems)/gi,
+        /([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)\s+(?:University|College|Institute)/gi
+    ];
+    
+    orgPatterns.forEach(pattern => {
+        const matches = text.match(pattern) || [];
+        entities.organizations.push(...matches);
+    });
+    
+    // Extract dates
+    const datePatterns = [
+        /\d{4}/g,
+        /(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d{4}/gi,
+        /\d{1,2}\/\d{4}/g
+    ];
+    
+    datePatterns.forEach(pattern => {
+        const matches = text.match(pattern) || [];
+        entities.dates.push(...matches);
+    });
+    
+    // Extract degrees
+    const degreePatterns = [
+        /Bachelor['\s]*(?:of\s+)?(?:Science|Arts|Engineering|Business)/gi,
+        /Master['\s]*(?:of\s+)?(?:Science|Arts|Engineering|Business)/gi,
+        /PhD|Ph\.D\.|Doctorate/gi,
+        /Associate['\s]*(?:of\s+)?(?:Science|Arts)/gi
+    ];
+    
+    degreePatterns.forEach(pattern => {
+        const matches = text.match(pattern) || [];
+        entities.degrees.push(...matches);
+    });
+    
+    // Extract job titles
+    const jobTitlePatterns = [
+        /(Senior|Junior|Lead|Principal|Staff)\s+(Engineer|Developer|Manager|Analyst)/gi,
+        /(Software|Data|Business|Systems)\s+(Engineer|Developer|Analyst|Architect)/gi,
+        /(Project|Product|Program)\s+Manager/gi
+    ];
+    
+    jobTitlePatterns.forEach(pattern => {
+        const matches = text.match(pattern) || [];
+        entities.jobTitles.push(...matches);
+    });
+    
+    // Extract locations
+    const locationPatterns = [
+        /[A-Z][a-z]+,\s*[A-Z]{2}/g,
+        /[A-Z][a-z]+,\s*[A-Z][a-z]+/g
+    ];
+    
+    locationPatterns.forEach(pattern => {
+        const matches = text.match(pattern) || [];
+        entities.locations.push(...matches);
+    });
+    
+    // Remove duplicates
+    Object.keys(entities).forEach(key => {
+        entities[key] = [...new Set(entities[key])];
+    });
+    
+    return entities;
+}
+
+// Impact Quantification Analysis
+function extractQuantifiedImpacts(text) {
+    const impactPatterns = [
+        /(increased|improved|enhanced|boosted|raised)\s+[^.]*?\s+by\s+(\d+%?)/gi,
+        /(reduced|decreased|lowered|cut|minimized)\s+[^.]*?\s+by\s+(\d+%?)/gi,
+        /(saved|earned|generated|produced)\s+[^.]*?\s+(\$?\d+[km]?)/gi,
+        /(managed|led|supervised|coordinated)\s+[^.]*?\s+(\d+[km]?\s*(?:people|team|members|employees))/gi,
+        /(delivered|completed|finished)\s+[^.]*?\s+(\d+[km]?\s*(?:projects|applications|systems|features))/gi
+    ];
+    
+    const impacts = [];
+    
+    impactPatterns.forEach(pattern => {
+        const matches = text.match(pattern) || [];
+        impacts.push(...matches);
+    });
+    
+    return {
+        impacts,
+        count: impacts.length,
+        score: Math.min(impacts.length * 10, 100) // 10 points per quantified impact
+    };
+}
+
+// Resume + Job Description Comparison Analysis
+function analyzeResumeWithJD(resumeText, jobDescription) {
+    // Extract keywords from job description
+    const jdKeywords = extractKeywordsFromJD(jobDescription);
+    const jdEntities = extractNamedEntities(jobDescription);
+    
+    // Analyze resume with JD context
+    const analysis = {
+        overallScore: 0,
+        breakdown: {},
+        recommendations: [],
+        keywords: {},
+        calculationProcess: [],
+        jdComparison: {
+            matchedKeywords: [],
+            missingKeywords: [],
+            keywordMatchScore: 0,
+            entityMatches: {},
+            suggestions: []
+        },
+        fileInfo: {
+            name: 'resume_with_jd',
+            type: 'comparison',
+            wordCount: resumeText.split(/\s+/).length,
+            characterCount: resumeText.length
+        }
+    };
+    
+    // Enhanced keyword analysis with JD comparison
+    analysis.breakdown.keywords = analyzeKeywords(resumeText, jobDescription);
+    
+    // Compare keywords
+    const resumeKeywords = Object.values(analysis.breakdown.keywords.details.industryKeywords).flat();
+    const matchedKeywords = jdKeywords.filter(jdKeyword => 
+        resumeKeywords.some(resumeKeyword => 
+            resumeKeyword.toLowerCase().includes(jdKeyword.toLowerCase()) ||
+            jdKeyword.toLowerCase().includes(resumeKeyword.toLowerCase())
+        )
+    );
+    
+    const missingKeywords = jdKeywords.filter(jdKeyword => 
+        !matchedKeywords.includes(jdKeyword)
+    );
+    
+    analysis.jdComparison.matchedKeywords = matchedKeywords;
+    analysis.jdComparison.missingKeywords = missingKeywords;
+    analysis.jdComparison.keywordMatchScore = (matchedKeywords.length / jdKeywords.length) * 100;
+    
+    // Compare entities
+    const resumeEntities = extractNamedEntities(resumeText);
+    analysis.jdComparison.entityMatches = {
+        organizations: jdEntities.organizations.filter(org => 
+            resumeEntities.organizations.some(resumeOrg => 
+                resumeOrg.toLowerCase().includes(org.toLowerCase())
+            )
+        ),
+        jobTitles: jdEntities.jobTitles.filter(title => 
+            resumeEntities.jobTitles.some(resumeTitle => 
+                resumeTitle.toLowerCase().includes(title.toLowerCase())
+            )
+        ),
+        degrees: jdEntities.degrees.filter(degree => 
+            resumeEntities.degrees.some(resumeDegree => 
+                resumeDegree.toLowerCase().includes(degree.toLowerCase())
+            )
+        )
+    };
+    
+    // Generate JD-specific suggestions
+    if (missingKeywords.length > 0) {
+        analysis.jdComparison.suggestions.push(
+            `Add these missing keywords from the job description: ${missingKeywords.slice(0, 5).join(', ')}`
+        );
+    }
+    
+    if (analysis.jdComparison.keywordMatchScore < 50) {
+        analysis.jdComparison.suggestions.push(
+            'Low keyword match with job description. Consider adding more relevant technical skills.'
+        );
+    }
+    
+    // Calculate overall score with JD bonus
+    const baseScore = analysis.breakdown.keywords.score;
+    const jdBonus = Math.min(analysis.jdComparison.keywordMatchScore * 0.3, 15);
+    analysis.overallScore = Math.min(baseScore + jdBonus, 100);
+    
+    // Display results with JD comparison
+    displayResultsWithJD(analysis);
+}
+
+function displayResultsWithJD(analysis) {
+    // Hide loading
+    document.getElementById('loadingOverlay').style.display = 'none';
+    
+    // Hide upload section and show analysis
+    document.getElementById('uploadSection').style.display = 'none';
+    document.getElementById('analysisSection').style.display = 'block';
+    document.getElementById('analysisSection').classList.add('fade-in');
+
+    // Save score to history
+    saveScoreHistory(analysis.overallScore, 'resume_with_jd_analysis', new Date().toISOString());
+    
+    // Update overall score
+    updateOverallScore(analysis.overallScore);
+    
+    // Display breakdown
+    displayBreakdown(analysis.breakdown);
+    
+    // Display JD comparison
+    displayJDComparison(analysis.jdComparison);
+    
+    // Display recommendations
+    displayRecommendations(analysis.recommendations);
+    
+    // Display keyword analysis
+    displayKeywordAnalysis(analysis.keywords);
+    
+    // Display calculation process
+    displayCalculationProcess(analysis.calculationProcess);
+    
+    // Display comparative analysis
+    displayComparativeAnalysis(analysis.overallScore);
+    
+    // Display score history
+    displayScoreHistory();
+}
+
+function displayJDComparison(jdComparison) {
+    // Create JD comparison section
+    let jdSection = document.getElementById('jdComparison');
+    if (!jdSection) {
+        jdSection = document.createElement('div');
+        jdSection.id = 'jdComparison';
+        jdSection.className = 'jd-comparison-section';
+        
+        const analysisSection = document.getElementById('analysisSection');
+        analysisSection.appendChild(jdSection);
+    }
+    
+    jdSection.innerHTML = `
+        <h3>Job Description Comparison</h3>
+        <div class="jd-comparison-grid">
+            <div class="jd-comparison-item">
+                <div class="jd-comparison-label">Keyword Match Score</div>
+                <div class="jd-comparison-value">${Math.round(jdComparison.keywordMatchScore)}%</div>
+            </div>
+            <div class="jd-comparison-item">
+                <div class="jd-comparison-label">Matched Keywords</div>
+                <div class="jd-comparison-value">${jdComparison.matchedKeywords.length}</div>
+            </div>
+            <div class="jd-comparison-item">
+                <div class="jd-comparison-label">Missing Keywords</div>
+                <div class="jd-comparison-value">${jdComparison.missingKeywords.length}</div>
+            </div>
+        </div>
+        
+        <div class="jd-keywords-section">
+            <div class="jd-matched-keywords">
+                <h4>✅ Matched Keywords</h4>
+                <div class="keyword-tags">
+                    ${jdComparison.matchedKeywords.map(keyword => 
+                        `<span class="keyword-tag present">${keyword}</span>`
+                    ).join('')}
+                </div>
+            </div>
+            
+            <div class="jd-missing-keywords">
+                <h4>❌ Missing Keywords</h4>
+                <div class="keyword-tags">
+                    ${jdComparison.missingKeywords.slice(0, 10).map(keyword => 
+                        `<span class="keyword-tag missing">${keyword}</span>`
+                    ).join('')}
+                </div>
+            </div>
+        </div>
+        
+        <div class="jd-suggestions">
+            <h4>💡 Job-Specific Suggestions</h4>
+            <ul>
+                ${jdComparison.suggestions.map(suggestion => 
+                    `<li>${suggestion}</li>`
+                ).join('')}
+            </ul>
+        </div>
+    `;
+}

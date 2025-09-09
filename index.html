@@ -44,6 +44,21 @@
                             </button>
                         </div>
                     </div>
+                    
+                    <!-- Job Description Upload (Optional) -->
+                    <div class="jd-upload-container" id="jdUploadContainer" style="display: none;">
+                        <div class="jd-upload-area" id="jdUploadArea">
+                            <div class="upload-icon">
+                                <i class="fas fa-file-alt"></i>
+                            </div>
+                            <h4>Upload Job Description (Optional)</h4>
+                            <p>For enhanced keyword matching and comparison</p>
+                            <input type="file" id="jdFileInput" accept=".txt,.pdf,.docx" hidden onchange="handleJDSelect(this)">
+                            <button class="jd-upload-btn" onclick="document.getElementById('jdFileInput').click()">
+                                Choose Job Description
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </section>
 
