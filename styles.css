@@ -978,6 +978,109 @@ body {
     border: 1px solid #feb2b2;
 }
 
+/* Visual Feedback Styles */
+.visual-feedback-section {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 15px;
+    padding: 25px;
+    margin: 20px 0;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.heatmap-container {
+    margin-bottom: 30px;
+}
+
+.heatmap-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.heatmap-item {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 15px;
+    text-align: center;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.heatmap-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+}
+
+.heatmap-item.high {
+    background: linear-gradient(135deg, #4CAF50, #45a049);
+    border-color: #4CAF50;
+}
+
+.heatmap-item.medium {
+    background: linear-gradient(135deg, #FF9800, #F57C00);
+    border-color: #FF9800;
+}
+
+.heatmap-item.low-medium {
+    background: linear-gradient(135deg, #FFC107, #FFA000);
+    border-color: #FFC107;
+}
+
+.heatmap-item.low {
+    background: linear-gradient(135deg, #F44336, #D32F2F);
+    border-color: #F44336;
+}
+
+.heatmap-score {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.heatmap-section {
+    font-size: 14px;
+    opacity: 0.9;
+}
+
+.impact-analysis-container {
+    margin-top: 20px;
+}
+
+.impact-chart {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.impact-category {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 15px;
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.impact-category h5 {
+    margin: 0 0 10px 0;
+    font-size: 14px;
+    color: #64B5F6;
+}
+
+.impact-count {
+    font-size: 20px;
+    font-weight: bold;
+    color: #4CAF50;
+    margin-bottom: 5px;
+}
+
+.impact-verbs {
+    font-size: 12px;
+    opacity: 0.8;
+}
+
 /* Dark Mode Support */
 .dark-mode {
     background: #1a202c;
@@ -1208,4 +1311,168 @@ body {
     .jd-comparison-grid {
         grid-template-columns: 1fr;
     }
+    
+    .heatmap-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .impact-chart {
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    }
+}
+
+/* Dark Mode Styles for Visual Feedback */
+.dark-mode .visual-feedback-section {
+    background: rgba(45, 55, 72, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dark-mode .heatmap-item {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.dark-mode .impact-category {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dark-mode .impact-category h5 {
+    color: #90cdf4;
+}
+
+/* Modal Styles */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    backdrop-filter: blur(5px);
+}
+
+.modal-content {
+    background: white;
+    border-radius: 15px;
+    padding: 0;
+    max-width: 500px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: modalSlideIn 0.3s ease-out;
+}
+
+.modal-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 20px;
+    border-radius: 15px 15px 0 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h3 {
+    margin: 0;
+    font-size: 1.3rem;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background 0.2s;
+}
+
+.modal-close:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.modal-body {
+    padding: 25px;
+}
+
+.section-score {
+    text-align: center;
+    margin-bottom: 25px;
+    padding: 20px;
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    border-radius: 10px;
+    color: white;
+}
+
+.section-score .score-number {
+    font-size: 2.5rem;
+    font-weight: bold;
+    display: block;
+}
+
+.section-score .score-label {
+    font-size: 1rem;
+    opacity: 0.9;
+}
+
+.section-issues, .section-suggestions {
+    margin-bottom: 20px;
+}
+
+.section-issues h4, .section-suggestions h4 {
+    color: #2d3748;
+    margin-bottom: 10px;
+    font-size: 1.1rem;
+}
+
+.section-issues ul, .section-suggestions ul {
+    list-style: none;
+    padding: 0;
+}
+
+.section-issues li, .section-suggestions li {
+    padding: 8px 0;
+    border-bottom: 1px solid #e2e8f0;
+    color: #4a5568;
+}
+
+.section-issues li:last-child, .section-suggestions li:last-child {
+    border-bottom: none;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-50px) scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Dark mode for modal */
+.dark-mode .modal-content {
+    background: #2d3748;
+    color: #e2e8f0;
+}
+
+.dark-mode .section-issues h4, .dark-mode .section-suggestions h4 {
+    color: #e2e8f0;
+}
+
+.dark-mode .section-issues li, .dark-mode .section-suggestions li {
+    color: #cbd5e0;
+    border-bottom-color: #4a5568;
 }
