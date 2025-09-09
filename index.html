@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ATS Score Calculator - Optimize Your Resume</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1><i class="fas fa-file-alt"></i> ATS Score Calculator</h1>
+                <p>Optimize your resume to pass through Applicant Tracking Systems and land more interviews</p>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Upload Section -->
+            <section class="upload-section" id="uploadSection">
+                <div class="upload-container">
+                    <div class="upload-area" id="uploadArea">
+                        <div class="upload-icon">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                        </div>
+                        <h3>Upload Your Resume</h3>
+                        <p>Drop your resume file here or click to browse</p>
+                        <p class="file-types">Supported formats: PDF, DOC, DOCX, TXT</p>
+                        <input type="file" id="fileInput" accept=".pdf,.doc,.docx,.txt" hidden>
+                        <button class="upload-btn" onclick="document.getElementById('fileInput').click()">
+                            Choose File
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Analysis Section -->
+            <section class="analysis-section" id="analysisSection" style="display: none;">
+                <!-- Overall Score -->
+                <div class="score-overview">
+                    <div class="score-circle">
+                        <div class="score-number" id="overallScore">0</div>
+                        <div class="score-label">ATS Score</div>
+                    </div>
+                    <div class="score-details">
+                        <h2 id="scoreTitle">Analyzing Your Resume...</h2>
+                        <p id="scoreDescription">We're evaluating your resume against ATS best practices</p>
+                    </div>
+                </div>
+
+                <!-- Calculation Process -->
+                <div class="calculation-section">
+                    <h3><i class="fas fa-calculator"></i> ATS Score Calculation Process</h3>
+                    <div class="calculation-table" id="calculationTable">
+                        <!-- Dynamic calculation process will be inserted here -->
+                    </div>
+                </div>
+
+                <!-- Detailed Breakdown -->
+                <div class="breakdown-section">
+                    <h3><i class="fas fa-chart-bar"></i> Detailed Analysis</h3>
+                    <div class="breakdown-grid" id="breakdownGrid">
+                        <!-- Dynamic content will be inserted here -->
+                    </div>
+                </div>
+
+                <!-- Recommendations -->
+                <div class="recommendations-section">
+                    <h3><i class="fas fa-lightbulb"></i> Recommendations to Reach 95%+ Score</h3>
+                    <div class="recommendations-container" id="recommendationsContainer">
+                        <!-- Dynamic recommendations will be inserted here -->
+                    </div>
+                </div>
+
+                <!-- Keyword Analysis -->
+                <div class="keyword-section">
+                    <h3><i class="fas fa-search"></i> Keyword Optimization</h3>
+                    <div class="keyword-analysis" id="keywordAnalysis">
+                        <!-- Dynamic keyword analysis will be inserted here -->
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="action-buttons">
+                    <button class="btn btn-primary" onclick="analyzeNewResume()">
+                        <i class="fas fa-upload"></i> Analyze Another Resume
+                    </button>
+                    <button class="btn btn-secondary" onclick="downloadReport()">
+                        <i class="fas fa-download"></i> Download Report
+                    </button>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>&copy; 2024 ATS Score Calculator. Built to help job seekers optimize their resumes.</p>
+        </footer>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay" style="display: none;">
+        <div class="loading-spinner">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>Analyzing your resume...</p>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
