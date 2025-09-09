@@ -355,21 +355,24 @@ function analyzeFormatting(text) {
     let score = 0;
     const issues = [];
     const suggestions = [];
+    const details = {};
 
-    if (text.includes('\n')) score += 20;
+    // Basic formatting checks
+    if (text.includes('\n')) score += 15;
     else issues.push('No line breaks detected');
 
-    if (text.includes('•') || text.includes('-') || text.includes('*')) score += 20;
+    if (text.includes('•') || text.includes('-') || text.includes('*')) score += 15;
     else {
         issues.push('No bullet points found');
         suggestions.push('Use bullet points (•) to list achievements and responsibilities');
     }
 
+    // Advanced formatting analysis
     const lines = text.split('\n');
     const hasConsistentHeaders = lines.some(line => 
         line.toUpperCase() === line && line.length > 3 && line.length < 30
     );
-    if (hasConsistentHeaders) score += 20;
+    if (hasConsistentHeaders) score += 15;
     else {
         issues.push('Inconsistent section headers');
         suggestions.push('Use ALL CAPS for section headers (EXPERIENCE, EDUCATION, etc.)');
@@ -378,24 +381,61 @@ function analyzeFormatting(text) {
     const hasSections = ['experience', 'education', 'skills'].some(section => 
         text.toLowerCase().includes(section)
     );
-    if (hasSections) score += 20;
+    if (hasSections) score += 15;
     else {
         issues.push('Missing standard resume sections');
         suggestions.push('Include standard sections: Experience, Education, Skills');
     }
 
     if (!text.includes('{') && !text.includes('}') && !text.includes('[') && !text.includes(']')) {
-        score += 20;
+        score += 15;
     } else {
         issues.push('Contains special characters that may confuse ATS');
         suggestions.push('Remove special characters like {}, [], and symbols');
     }
 
+    // Advanced checks
+    const dateFormats = [
+        /(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d{4}/g,
+        /\d{4}\s*-\s*\d{4}/g,
+        /(Present|Current)/gi
+    ];
+    
+    const hasDateFormats = dateFormats.some(regex => regex.test(text));
+    if (hasDateFormats) score += 10;
+    else {
+        issues.push('No consistent date formats found');
+        suggestions.push('Use consistent date formats like "Jan 2020 - Present" or "2020-2023"');
+    }
+
+    // Check bullet point consistency
+    const bulletStyles = text.match(/[•\-\*]\s/g);
+    const isConsistent = bulletStyles && new Set(bulletStyles).size === 1;
+    if (isConsistent) score += 10;
+    else if (bulletStyles) {
+        issues.push('Inconsistent bullet point styles');
+        suggestions.push('Use the same bullet point style throughout (•, -, or *)');
+    }
+
+    // Check section spacing
+    const sections = text.split(/\n\s*\n/);
+    const hasProperSpacing = sections.length >= 4;
+    if (hasProperSpacing) score += 5;
+    else {
+        issues.push('Insufficient section spacing');
+        suggestions.push('Add blank lines between major sections for better readability');
+    }
+
+    details.dateFormats = hasDateFormats;
+    details.bulletConsistency = isConsistent;
+    details.spacing = hasProperSpacing;
+
     return {
         score: Math.min(score, 100),
         issues,
         suggestions,
-        description: 'Resume formatting and structure analysis'
+        description: 'Resume formatting and structure analysis',
+        details
     };
 }
 
@@ -713,28 +753,72 @@ function generateRecommendations(breakdown, overallScore) {
 
 function analyzeIndustryKeywords(text) {
     const industryKeywords = {
-        'software': ['programming', 'development', 'coding', 'software engineering', 'algorithms', 'data structures', 'API', 'database', 'frontend', 'backend', 'full-stack', 'JavaScript', 'Python', 'Java', 'React', 'Node.js', 'Git', 'Agile', 'DevOps', 'cloud computing', 'machine learning', 'AI'],
-        'marketing': ['digital marketing', 'SEO', 'SEM', 'social media', 'content marketing', 'brand management', 'analytics', 'campaign management', 'lead generation', 'conversion optimization', 'email marketing', 'PPC', 'Google Analytics', 'HubSpot', 'Salesforce'],
-        'finance': ['financial analysis', 'budgeting', 'forecasting', 'risk management', 'investment', 'portfolio management', 'compliance', 'auditing', 'accounting', 'financial modeling', 'Excel', 'SAP', 'QuickBooks', 'GAAP', 'IFRS'],
-        'healthcare': ['patient care', 'medical', 'healthcare', 'clinical', 'diagnosis', 'treatment', 'HIPAA', 'EMR', 'EHR', 'pharmaceutical', 'nursing', 'physician', 'healthcare administration'],
-        'general': ['leadership', 'management', 'communication', 'problem solving', 'teamwork', 'project management', 'analytical', 'strategic planning', 'customer service', 'sales', 'negotiation', 'presentation', 'Microsoft Office', 'Excel', 'PowerPoint', 'Word']
+        'software': {
+            'languages': ['JavaScript', 'Python', 'Java', 'TypeScript', 'Go', 'Rust', 'C++', 'C#', 'Swift', 'Kotlin', 'PHP', 'Ruby', 'Scala'],
+            'frameworks': ['React', 'Angular', 'Vue.js', 'Node.js', 'Express', 'Django', 'Spring Boot', 'Laravel', 'Flask', 'FastAPI', 'Next.js', 'Nuxt.js'],
+            'tools': ['Git', 'Docker', 'Kubernetes', 'Jenkins', 'AWS', 'Azure', 'GCP', 'MongoDB', 'PostgreSQL', 'Redis', 'Elasticsearch', 'Terraform'],
+            'concepts': ['Agile', 'Scrum', 'DevOps', 'CI/CD', 'Microservices', 'API', 'REST', 'GraphQL', 'Machine Learning', 'AI', 'Cloud Computing', 'Data Structures', 'Algorithms']
+        },
+        'marketing': {
+            'digital': ['SEO', 'SEM', 'PPC', 'Google Ads', 'Facebook Ads', 'Instagram Marketing', 'LinkedIn Ads', 'Twitter Ads', 'TikTok Marketing'],
+            'analytics': ['Google Analytics', 'HubSpot', 'Salesforce', 'Mailchimp', 'Hootsuite', 'Buffer', 'Sprout Social', 'Adobe Analytics'],
+            'content': ['Content Marketing', 'Social Media', 'Email Marketing', 'Influencer Marketing', 'Video Marketing', 'Blog Writing', 'Copywriting'],
+            'strategy': ['Brand Management', 'Campaign Management', 'Lead Generation', 'Conversion Optimization', 'Marketing Automation', 'CRM']
+        },
+        'finance': {
+            'analysis': ['Financial Analysis', 'Budgeting', 'Forecasting', 'Risk Management', 'Investment Analysis', 'Portfolio Management', 'Valuation'],
+            'tools': ['Excel', 'SAP', 'QuickBooks', 'Tableau', 'Power BI', 'Bloomberg', 'Reuters', 'Morningstar'],
+            'standards': ['GAAP', 'IFRS', 'SOX', 'Basel III', 'FASB', 'IASB'],
+            'specialties': ['Corporate Finance', 'Investment Banking', 'Private Equity', 'Hedge Funds', 'Asset Management', 'Treasury']
+        },
+        'healthcare': {
+            'clinical': ['Patient Care', 'Medical', 'Healthcare', 'Clinical', 'Diagnosis', 'Treatment', 'Therapy', 'Surgery'],
+            'systems': ['HIPAA', 'EMR', 'EHR', 'Epic', 'Cerner', 'Allscripts', 'Meditech'],
+            'specialties': ['Nursing', 'Physician', 'Pharmacist', 'Physical Therapy', 'Mental Health', 'Emergency Medicine'],
+            'administration': ['Healthcare Administration', 'Hospital Management', 'Health Informatics', 'Medical Coding', 'Billing']
+        },
+        'general': {
+            'leadership': ['Leadership', 'Management', 'Team Building', 'Mentoring', 'Coaching', 'Strategic Planning'],
+            'communication': ['Communication', 'Presentation', 'Public Speaking', 'Writing', 'Negotiation', 'Collaboration'],
+            'skills': ['Problem Solving', 'Analytical', 'Critical Thinking', 'Project Management', 'Time Management', 'Organization'],
+            'tools': ['Microsoft Office', 'Excel', 'PowerPoint', 'Word', 'Outlook', 'Teams', 'Slack', 'Zoom']
+        }
     };
 
     const analysis = {};
     
-    Object.entries(industryKeywords).forEach(([industry, keywords]) => {
-        const foundKeywords = keywords.filter(keyword => 
+    Object.entries(industryKeywords).forEach(([industry, categories]) => {
+        const allKeywords = Object.values(categories).flat();
+        const foundKeywords = allKeywords.filter(keyword => 
             text.toLowerCase().includes(keyword.toLowerCase())
         );
         
+        // Category-wise analysis
+        const categoryAnalysis = {};
+        Object.entries(categories).forEach(([category, keywords]) => {
+            const foundInCategory = keywords.filter(keyword => 
+                text.toLowerCase().includes(keyword.toLowerCase())
+            );
+            categoryAnalysis[category] = {
+                total: keywords.length,
+                found: foundInCategory.length,
+                percentage: Math.round((foundInCategory.length / keywords.length) * 100),
+                keywords: foundInCategory,
+                missing: keywords.filter(keyword => 
+                    !text.toLowerCase().includes(keyword.toLowerCase())
+                )
+            };
+        });
+        
         analysis[industry] = {
-            total: keywords.length,
+            total: allKeywords.length,
             found: foundKeywords.length,
-            percentage: Math.round((foundKeywords.length / keywords.length) * 100),
+            percentage: Math.round((foundKeywords.length / allKeywords.length) * 100),
             keywords: foundKeywords,
-            missing: keywords.filter(keyword => 
+            missing: allKeywords.filter(keyword => 
                 !text.toLowerCase().includes(keyword.toLowerCase())
-            )
+            ),
+            categories: categoryAnalysis
         };
     });
 
@@ -771,6 +855,9 @@ function displayResults(analysis) {
     document.getElementById('analysisSection').style.display = 'block';
     document.getElementById('analysisSection').classList.add('fade-in');
 
+    // Save score to history
+    saveScoreHistory(analysis.overallScore, 'resume_analysis', new Date().toISOString());
+    
     // Update overall score
     updateOverallScore(analysis.overallScore);
     
@@ -785,6 +872,12 @@ function displayResults(analysis) {
     
     // Display calculation process
     displayCalculationProcess(analysis.calculationProcess);
+    
+    // Display comparative analysis
+    displayComparativeAnalysis(analysis.overallScore);
+    
+    // Display score history
+    displayScoreHistory();
 }
 
 function updateOverallScore(score) {
@@ -1009,3 +1102,372 @@ Website: https://surbhisrivastava1801.github.io/ATS-score-calculator/`;
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
 }
+
+// Enhanced Features
+
+// Score History Tracking
+function saveScoreHistory(score, filename, date) {
+    const history = JSON.parse(localStorage.getItem('atsScoreHistory') || '[]');
+    history.push({ 
+        score, 
+        filename, 
+        date, 
+        timestamp: Date.now(),
+        id: Date.now()
+    });
+    
+    // Keep only last 20 entries
+    if (history.length > 20) {
+        history.splice(0, history.length - 20);
+    }
+    
+    localStorage.setItem('atsScoreHistory', JSON.stringify(history));
+}
+
+function displayScoreHistory() {
+    const history = JSON.parse(localStorage.getItem('atsScoreHistory') || '[]');
+    if (history.length === 0) return;
+    
+    // Create history section if it doesn't exist
+    let historySection = document.getElementById('scoreHistory');
+    if (!historySection) {
+        historySection = document.createElement('div');
+        historySection.id = 'scoreHistory';
+        historySection.className = 'score-history-section';
+        historySection.innerHTML = `
+            <h3>Score History</h3>
+            <div class="history-chart">
+                <canvas id="historyChart" width="400" height="200"></canvas>
+            </div>
+            <div class="history-stats">
+                <div class="stat-item">
+                    <span class="stat-label">Average Score:</span>
+                    <span class="stat-value">${calculateAverageScore(history)}%</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Best Score:</span>
+                    <span class="stat-value">${Math.max(...history.map(h => h.score))}%</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Improvement:</span>
+                    <span class="stat-value">${calculateImprovement(history)}%</span>
+                </div>
+            </div>
+        `;
+        
+        const analysisSection = document.getElementById('analysisSection');
+        analysisSection.appendChild(historySection);
+    }
+    
+    // Draw simple chart
+    drawHistoryChart(history);
+}
+
+function calculateAverageScore(history) {
+    if (history.length === 0) return 0;
+    const sum = history.reduce((acc, h) => acc + h.score, 0);
+    return Math.round(sum / history.length);
+}
+
+function calculateImprovement(history) {
+    if (history.length < 2) return 0;
+    const first = history[0].score;
+    const last = history[history.length - 1].score;
+    return last - first;
+}
+
+function drawHistoryChart(history) {
+    const canvas = document.getElementById('historyChart');
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext('2d');
+    const width = canvas.width;
+    const height = canvas.height;
+    
+    // Clear canvas
+    ctx.clearRect(0, 0, width, height);
+    
+    // Draw axes
+    ctx.strokeStyle = '#ddd';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(40, 20);
+    ctx.lineTo(40, height - 20);
+    ctx.lineTo(width - 20, height - 20);
+    ctx.stroke();
+    
+    // Draw data points
+    if (history.length > 1) {
+        const stepX = (width - 60) / (history.length - 1);
+        const maxScore = Math.max(...history.map(h => h.score));
+        const minScore = Math.min(...history.map(h => h.score));
+        const range = maxScore - minScore || 1;
+        
+        ctx.strokeStyle = '#667eea';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        
+        history.forEach((entry, index) => {
+            const x = 40 + (index * stepX);
+            const y = height - 20 - ((entry.score - minScore) / range) * (height - 40);
+            
+            if (index === 0) {
+                ctx.moveTo(x, y);
+            } else {
+                ctx.lineTo(x, y);
+            }
+            
+            // Draw point
+            ctx.fillStyle = '#667eea';
+            ctx.beginPath();
+            ctx.arc(x, y, 3, 0, 2 * Math.PI);
+            ctx.fill();
+        });
+        
+        ctx.stroke();
+    }
+}
+
+// Comparative Analysis
+function compareWithIndustryAverage(score, industry = 'general') {
+    const industryAverages = {
+        'software': 78,
+        'marketing': 72,
+        'finance': 75,
+        'healthcare': 80,
+        'general': 75
+    };
+    
+    const average = industryAverages[industry] || 75;
+    const difference = score - average;
+    
+    return {
+        score,
+        industryAverage: average,
+        difference,
+        percentile: calculatePercentile(score, industry)
+    };
+}
+
+function calculatePercentile(score, industry) {
+    // Simplified percentile calculation
+    if (score >= 95) return 95;
+    if (score >= 90) return 85;
+    if (score >= 85) return 70;
+    if (score >= 80) return 55;
+    if (score >= 75) return 40;
+    if (score >= 70) return 25;
+    if (score >= 65) return 15;
+    return 5;
+}
+
+function displayComparativeAnalysis(score) {
+    const comparison = compareWithIndustryAverage(score);
+    
+    // Create comparison section if it doesn't exist
+    let comparisonSection = document.getElementById('comparativeAnalysis');
+    if (!comparisonSection) {
+        comparisonSection = document.createElement('div');
+        comparisonSection.id = 'comparativeAnalysis';
+        comparisonSection.className = 'comparative-analysis-section';
+        
+        const analysisSection = document.getElementById('analysisSection');
+        analysisSection.appendChild(comparisonSection);
+    }
+    
+    comparisonSection.innerHTML = `
+        <h3>Industry Comparison</h3>
+        <div class="comparison-grid">
+            <div class="comparison-item">
+                <div class="comparison-label">Your Score</div>
+                <div class="comparison-value">${score}%</div>
+            </div>
+            <div class="comparison-item">
+                <div class="comparison-label">Industry Average</div>
+                <div class="comparison-value">${comparison.industryAverage}%</div>
+            </div>
+            <div class="comparison-item">
+                <div class="comparison-label">Difference</div>
+                <div class="comparison-value ${comparison.difference >= 0 ? 'positive' : 'negative'}">
+                    ${comparison.difference >= 0 ? '+' : ''}${comparison.difference}%
+                </div>
+            </div>
+            <div class="comparison-item">
+                <div class="comparison-label">Percentile</div>
+                <div class="comparison-value">${comparison.percentile}th</div>
+            </div>
+        </div>
+    `;
+}
+
+// Resume Length Optimizer
+function optimizeResumeLength(text, targetWords = 500) {
+    const currentWords = text.split(/\s+/).length;
+    const difference = currentWords - targetWords;
+    
+    if (difference > 0) {
+        return {
+            action: 'reduce',
+            currentWords,
+            targetWords,
+            difference,
+            suggestions: [
+                'Remove redundant phrases and filler words',
+                'Combine similar bullet points',
+                'Use more concise, action-oriented language',
+                'Eliminate unnecessary adjectives and adverbs',
+                'Focus on quantifiable achievements'
+            ],
+            examples: generateConciseExamples(text)
+        };
+    } else if (difference < 0) {
+        return {
+            action: 'expand',
+            currentWords,
+            targetWords,
+            difference: Math.abs(difference),
+            suggestions: [
+                'Add more specific achievements with numbers',
+                'Include additional relevant skills',
+                'Expand on key experiences with more detail',
+                'Add industry-specific keywords',
+                'Include more quantified results'
+            ]
+        };
+    } else {
+        return {
+            action: 'optimal',
+            currentWords,
+            targetWords,
+            difference: 0,
+            message: 'Your resume length is optimal for ATS systems!'
+        };
+    }
+}
+
+function generateConciseExamples(text) {
+    return [
+        {
+            before: 'Responsible for managing and overseeing the development of various software applications',
+            after: 'Led software development for 5+ applications'
+        },
+        {
+            before: 'Worked collaboratively with team members to achieve project goals',
+            after: 'Collaborated with 8-person team to deliver projects 20% ahead of schedule'
+        }
+    ];
+}
+
+// Keyword Density Analyzer
+function analyzeKeywordDensity(text, industry = 'general') {
+    const industryKeywords = {
+        'software': ['JavaScript', 'Python', 'React', 'Node.js', 'Git', 'Agile', 'API', 'Database'],
+        'marketing': ['SEO', 'SEM', 'Analytics', 'Campaign', 'Lead Generation', 'Social Media'],
+        'finance': ['Excel', 'Financial Analysis', 'Budgeting', 'Risk Management', 'Investment'],
+        'healthcare': ['Patient Care', 'HIPAA', 'EMR', 'Clinical', 'Medical'],
+        'general': ['Leadership', 'Management', 'Communication', 'Problem Solving', 'Teamwork']
+    };
+    
+    const keywords = industryKeywords[industry] || industryKeywords.general;
+    const wordCount = text.split(/\s+/).length;
+    const density = {};
+    
+    keywords.forEach(keyword => {
+        const matches = (text.toLowerCase().match(new RegExp(keyword.toLowerCase(), 'g')) || []).length;
+        density[keyword] = {
+            count: matches,
+            percentage: (matches / wordCount) * 100,
+            recommendation: matches === 0 ? 'Add this keyword' : 
+                          matches === 1 ? 'Good usage' : 
+                          matches > 3 ? 'Consider reducing repetition' : 'Optimal usage'
+        };
+    });
+    
+    return density;
+}
+
+// Content Quality Validation
+function validateContentQuality(text) {
+    const wordCount = text.split(/\s+/).length;
+    const sentenceCount = text.split(/[.!?]+/).length;
+    const avgWordsPerSentence = wordCount / sentenceCount;
+    
+    // Readability score (simplified Flesch Reading Ease)
+    const readabilityScore = Math.max(0, Math.min(100, 206.835 - (1.015 * avgWordsPerSentence) - (84.6 * (text.split(/[aeiou]/gi).length / wordCount))));
+    
+    return {
+        readability: {
+            score: Math.round(readabilityScore),
+            level: readabilityScore >= 80 ? 'Very Easy' :
+                   readabilityScore >= 60 ? 'Easy' :
+                   readabilityScore >= 40 ? 'Moderate' :
+                   readabilityScore >= 20 ? 'Difficult' : 'Very Difficult'
+        },
+        clarity: {
+            avgWordsPerSentence: Math.round(avgWordsPerSentence),
+            recommendation: avgWordsPerSentence > 20 ? 'Use shorter sentences' : 'Good sentence length'
+        },
+        completeness: {
+            hasContact: /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/.test(text),
+            hasExperience: /experience|employment|work history/i.test(text),
+            hasEducation: /education|degree|university|college/i.test(text),
+            hasSkills: /skills|technical|competencies/i.test(text)
+        },
+        consistency: {
+            bulletStyle: checkBulletConsistency(text),
+            dateFormat: checkDateFormatConsistency(text),
+            headerStyle: checkHeaderConsistency(text)
+        }
+    };
+}
+
+function checkBulletConsistency(text) {
+    const bullets = text.match(/[•\-\*]\s/g);
+    if (!bullets) return { consistent: false, style: 'none' };
+    const uniqueStyles = new Set(bullets);
+    return { consistent: uniqueStyles.size === 1, style: bullets[0] };
+}
+
+function checkDateFormatConsistency(text) {
+    const dates = text.match(/\d{4}|\d{1,2}\/\d{1,2}\/\d{4}|(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)/gi);
+    return { consistent: dates && dates.length > 0, count: dates ? dates.length : 0 };
+}
+
+function checkHeaderConsistency(text) {
+    const headers = text.split('\n').filter(line => 
+        line.length > 3 && line.length < 30 && line === line.toUpperCase()
+    );
+    return { consistent: headers.length > 0, count: headers.length };
+}
+
+// Dark Mode Toggle
+function toggleDarkMode() {
+    const body = document.body;
+    const toggle = document.getElementById('darkModeToggle');
+    const icon = toggle.querySelector('i');
+    
+    body.classList.toggle('dark-mode');
+    
+    if (body.classList.contains('dark-mode')) {
+        icon.className = 'fas fa-sun';
+        localStorage.setItem('darkMode', 'enabled');
+    } else {
+        icon.className = 'fas fa-moon';
+        localStorage.setItem('darkMode', 'disabled');
+    }
+}
+
+// Initialize dark mode from localStorage
+function initializeDarkMode() {
+    const darkMode = localStorage.getItem('darkMode');
+    const toggle = document.getElementById('darkModeToggle');
+    const icon = toggle.querySelector('i');
+    
+    if (darkMode === 'enabled') {
+        document.body.classList.add('dark-mode');
+        icon.className = 'fas fa-sun';
+    }
+}
+
+// Initialize when page loads
+document.addEventListener('DOMContentLoaded', initializeDarkMode);
