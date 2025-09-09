@@ -52,6 +52,7 @@ function createSampleResume(filename) {
     }, 0);
     
     const variations = [
+        // High-scoring resume (95%+)
         `Sarah Johnson
 Senior Software Engineer
 sarah.johnson@email.com | (555) 987-6543 | San Francisco, CA | linkedin.com/in/sarahjohnson
@@ -102,6 +103,7 @@ ACHIEVEMENTS
 • Improved customer satisfaction scores by 35%
 • Recognized as Employee of the Year 2022`,
 
+        // Medium-scoring resume (70-85%)
         `Michael Chen
 Software Developer
 michael.chen@email.com | (555) 456-7890 | Seattle, WA
@@ -140,7 +142,107 @@ GPA: 3.6/4.0
 
 ACHIEVEMENTS
 • Improved team productivity by 20%
-• Reduced bugs by 30%`
+• Reduced bugs by 30%`,
+
+        // Low-scoring resume (50-70%)
+        `John Smith
+john.smith@email.com | (555) 123-4567
+
+SUMMARY
+I am a hardworking person with good communication skills and problem solving abilities.
+I have worked in different companies and gained valuable experience.
+
+EXPERIENCE
+Software Developer | ABC Company | 2020 - 2022
+• Worked on various projects
+• Learned new technologies
+• Helped team members
+
+Intern | XYZ Corp | 2019 - 2020
+• Assisted senior developers
+• Completed assigned tasks
+• Attended meetings
+
+EDUCATION
+Computer Science Degree
+State University | 2015 - 2019
+
+SKILLS
+• Programming
+• Teamwork
+• Communication`,
+
+        // Very high-scoring resume (98%+)
+        `Emily Rodriguez
+Senior Full-Stack Engineer & Technical Lead
+emily.rodriguez@email.com | (555) 234-5678 | Austin, TX | linkedin.com/in/emilyrodriguez | github.com/emilyrodriguez
+
+PROFESSIONAL SUMMARY
+Accomplished software engineer with 8+ years of experience in full-stack development, 
+cloud architecture, and team leadership. Expert in modern web technologies, microservices, 
+and DevOps practices. Proven track record of delivering high-impact solutions and 
+leading cross-functional teams of 15+ engineers.
+
+TECHNICAL SKILLS
+Programming Languages: JavaScript, TypeScript, Python, Java, Go, Rust, C#
+Frameworks & Libraries: React, Vue.js, Angular, Node.js, Express, Django, Spring Boot, .NET Core
+Databases: PostgreSQL, MongoDB, Redis, MySQL, Elasticsearch, DynamoDB
+Cloud & DevOps: AWS, Azure, GCP, Docker, Kubernetes, Terraform, Jenkins, GitLab CI/CD
+Methodologies: Agile, Scrum, Kanban, Test-Driven Development, Continuous Integration
+Leadership: Team Management, Technical Mentoring, Architecture Design, Code Reviews
+
+PROFESSIONAL EXPERIENCE
+
+Senior Full-Stack Engineer & Technical Lead | CloudTech Solutions | 2021 - Present
+• Architected and led development of distributed microservices platform serving 10M+ users
+• Implemented comprehensive CI/CD pipelines reducing deployment time by 80%
+• Mentored 12 junior and mid-level developers, conducting weekly code reviews
+• Collaborated with product and design teams to define technical requirements
+• Increased system performance by 65% through optimization and caching strategies
+• Reduced infrastructure costs by $3.5M annually through cloud optimization
+• Led migration from monolithic to microservices architecture
+• Implemented automated testing increasing code coverage to 95%
+
+Senior Software Engineer | TechInnovate Inc. | 2019 - 2021
+• Developed scalable web applications using React, Node.js, and PostgreSQL
+• Built RESTful APIs and GraphQL endpoints serving 2M+ requests daily
+• Participated in Agile development process and sprint planning
+• Optimized database queries and implemented caching improving performance by 70%
+• Reduced production bugs by 60% through comprehensive testing strategies
+• Led technical interviews and onboarding for new team members
+
+Software Engineer | WebCraft Studios | 2017 - 2019
+• Created responsive user interfaces using modern JavaScript frameworks
+• Worked with senior developers on enterprise-level projects
+• Participated in code reviews and technical discussions
+• Gained expertise in version control, project management, and team collaboration
+• Improved application load times by 40% through performance optimization
+
+EDUCATION
+Master of Science in Computer Science
+University of Texas at Austin | 2015 - 2017
+Bachelor of Science in Computer Science
+Texas A&M University | 2011 - 2015
+GPA: 3.8/4.0
+
+CERTIFICATIONS
+AWS Certified Solutions Architect Professional | 2023
+Google Cloud Professional Cloud Architect | 2022
+Certified Kubernetes Administrator (CKA) | 2021
+Microsoft Azure Solutions Architect Expert | 2020
+
+PROJECTS
+E-commerce Platform: Full-stack application with React frontend, Node.js backend, and PostgreSQL database
+Real-time Analytics Dashboard: Data visualization tool using D3.js and WebSocket technology
+Mobile App Backend: RESTful API service supporting 500K+ daily active users
+
+ACHIEVEMENTS
+• Led cross-functional team of 15 developers on mission-critical project
+• Improved customer satisfaction scores by 45% through enhanced user experience
+• Recognized as "Engineer of the Year" 2023
+• Published 8 technical articles on software architecture and best practices
+• Speaker at 5 major tech conferences including AWS re:Invent and React Conf
+• Contributed to 3 open-source projects with 1000+ GitHub stars combined`
     ];
     
     return variations[Math.abs(nameHash) % variations.length];
@@ -845,4 +947,65 @@ function resetCalculator() {
     document.getElementById('uploadSection').style.display = 'block';
     document.getElementById('analysisSection').style.display = 'none';
     document.getElementById('fileInput').value = '';
+}
+
+function analyzeNewResume() {
+    resetCalculator();
+}
+
+function downloadReport() {
+    // Get the current analysis results from the displayed content
+    const score = document.getElementById('overallScore').textContent;
+    const title = document.getElementById('scoreTitle').textContent;
+    const description = document.getElementById('scoreDescription').textContent;
+    
+    // Get breakdown data
+    const breakdownItems = document.querySelectorAll('.breakdown-item');
+    let breakdownText = '';
+    breakdownItems.forEach(item => {
+        const title = item.querySelector('.breakdown-title').textContent;
+        const score = item.querySelector('.breakdown-score').textContent;
+        const description = item.querySelector('.breakdown-description').textContent;
+        breakdownText += `${title}: ${score}\n${description}\n\n`;
+    });
+    
+    // Get recommendations
+    const recommendations = document.querySelectorAll('.recommendation-content');
+    let recommendationsText = '';
+    recommendations.forEach((rec, index) => {
+        const title = rec.querySelector('h4').textContent;
+        const description = rec.querySelector('p').textContent;
+        recommendationsText += `${index + 1}. ${title}\n   ${description}\n\n`;
+    });
+    
+    // Create report
+    const report = `ATS SCORE CALCULATOR REPORT
+================================
+
+Overall ATS Score: ${score}%
+${title}
+${description}
+
+DETAILED BREAKDOWN:
+------------------
+${breakdownText}
+
+RECOMMENDATIONS:
+---------------
+${recommendationsText}
+
+Generated on: ${new Date().toLocaleDateString()}
+Generated by: ATS Score Calculator
+Website: https://surbhisrivastava1801.github.io/ATS-score-calculator/`;
+
+    // Download the report
+    const blob = new Blob([report], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `ats-score-report-${new Date().toISOString().split('T')[0]}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
 }
