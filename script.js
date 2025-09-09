@@ -653,9 +653,23 @@ function analyzeAndDisplay(text, filename = 'resume', fileType = 'text/plain') {
         analysis.breakdown.length = analyzeLength(text);
         analysis.breakdown.achievements = analyzeAchievements(text);
 
-        // Calculate overall score
+        // Calculate overall score with more realistic scoring
         const scores = Object.values(analysis.breakdown).map(item => item.score);
-        analysis.overallScore = Math.round(scores.reduce((sum, score) => sum + score, 0) / scores.length);
+        const averageScore = scores.reduce((sum, score) => sum + score, 0) / scores.length;
+        
+        // Apply more realistic scoring curve (no one should get 100% easily)
+        let adjustedScore = averageScore;
+        if (averageScore > 90) {
+            adjustedScore = 85 + (averageScore - 90) * 0.5; // Cap high scores
+        } else if (averageScore > 80) {
+            adjustedScore = 75 + (averageScore - 80) * 1.0; // Moderate high scores
+        }
+        
+        analysis.overallScore = Math.round(Math.min(95, adjustedScore)); // Cap at 95%
+        
+        // Debug logging to identify inflated scores
+        console.log('Individual scores:', Object.entries(analysis.breakdown).map(([key, value]) => `${key}: ${value.score}`));
+        console.log('Raw average:', averageScore.toFixed(1), 'Adjusted score:', analysis.overallScore);
 
         // Generate recommendations
         analysis.recommendations = generateRecommendations(analysis.breakdown, analysis.overallScore);
@@ -691,11 +705,11 @@ function analyzeFormatting(text) {
         suggestions: robustAnalysis.suggestions.length
     };
 
-    // Basic formatting checks
-    if (text.includes('\n')) score += 10;
+    // Basic formatting checks (more conservative scoring)
+    if (text.includes('\n')) score += 5;
     else issues.push('No line breaks detected');
 
-    if (text.includes('•') || text.includes('-') || text.includes('*')) score += 10;
+    if (text.includes('•') || text.includes('-') || text.includes('*')) score += 5;
     else {
         issues.push('No bullet points found');
         suggestions.push('Use bullet points (•) to list achievements and responsibilities');
@@ -706,7 +720,7 @@ function analyzeFormatting(text) {
     const hasConsistentHeaders = lines.some(line => 
         line.toUpperCase() === line && line.length > 3 && line.length < 30
     );
-    if (hasConsistentHeaders) score += 10;
+    if (hasConsistentHeaders) score += 5;
     else {
         issues.push('Inconsistent section headers');
         suggestions.push('Use ALL CAPS for section headers (EXPERIENCE, EDUCATION, etc.)');
@@ -842,13 +856,14 @@ function analyzeKeywords(text, jobDescription = null) {
     // NEW: Enhanced impact analysis
     const impactAnalysis = analyzeImpactLanguage(text);
 
-    // Calculate overall keyword score with new components
+    // Calculate overall keyword score with new components (more conservative approach)
     const baseScore = (contextualAnalysis.score + weightedScore.score + distributionAnalysis.score + synonymMatches.score) / 4;
-    const semanticBonus = semanticAnalysis.score * 0.2; // 20% bonus for semantic matching
-    const contextualBonus = contextualWeighting.totalScore * 0.15; // 15% bonus for contextual weighting
-    const impactBonus = impactAnalysis.score * 0.1; // 10% bonus for impact language
+    const semanticBonus = semanticAnalysis.score * 0.1; // Reduced to 10% bonus for semantic matching
+    const contextualBonus = contextualWeighting.totalScore * 0.05; // Reduced to 5% bonus for contextual weighting
+    const impactBonus = impactAnalysis.score * 0.05; // Reduced to 5% bonus for impact language
     
-    score = Math.round(Math.min(100, baseScore + semanticBonus + contextualBonus + impactBonus));
+    // More conservative scoring to prevent inflated scores
+    score = Math.round(Math.min(85, baseScore + semanticBonus + contextualBonus + impactBonus));
 
     // Enhanced action verb analysis with bigrams/trigrams
     const actionVerbPhrases = {
@@ -1004,7 +1019,7 @@ function analyzeContactInfo(text) {
     const emails = text.match(emailRegex) || [];
     
     if (emails.length > 0) {
-        score += 35;
+        score += 20;
         details.emails = emails;
         
         // Check for professional email domains
@@ -1025,7 +1040,7 @@ function analyzeContactInfo(text) {
     const phones = text.match(phoneRegex) || [];
     
     if (phones.length > 0) {
-        score += 30;
+        score += 15;
         details.phones = phones;
         
         // Check for consistent formatting
@@ -3008,8 +3023,8 @@ function analyzeResumeWithJD(resumeText, jobDescription) {
     
     // Calculate overall score with JD bonus
     const baseScore = analysis.breakdown.keywords.score;
-    const jdBonus = Math.min(analysis.jdComparison.keywordMatchScore * 0.3, 15);
-    analysis.overallScore = Math.min(baseScore + jdBonus, 100);
+    const jdBonus = Math.min(analysis.jdComparison.keywordMatchScore * 0.2, 10); // Reduced bonus
+    analysis.overallScore = Math.min(baseScore + jdBonus, 95); // Cap at 95%
     
     // Display results with JD comparison
     displayResultsWithJD(analysis);
