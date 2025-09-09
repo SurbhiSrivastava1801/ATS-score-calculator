@@ -15,63 +15,67 @@ class ATSCalculator {
     }
 
     initializeEventListeners() {
+        // Wait for DOM to be ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => this.setupEventListeners());
+        } else {
+            this.setupEventListeners();
+        }
+    }
+
+    setupEventListeners() {
         const fileInput = document.getElementById('fileInput');
         const uploadArea = document.getElementById('uploadArea');
         const chooseFileBtn = document.getElementById('chooseFileBtn');
 
-        // Use arrow functions to preserve 'this' context
-        fileInput.addEventListener('change', (e) => this.handleFileSelect(e));
+        if (!fileInput || !uploadArea || !chooseFileBtn) {
+            console.error('Required elements not found');
+            return;
+        }
+
+        // File input change event
+        fileInput.addEventListener('change', (e) => {
+            console.log('File input changed');
+            if (e.target.files && e.target.files[0]) {
+                this.processFile(e.target.files[0]);
+            }
+        });
         
-        uploadArea.addEventListener('dragover', (e) => this.handleDragOver(e));
-        uploadArea.addEventListener('dragleave', (e) => this.handleDragLeave(e));
-        uploadArea.addEventListener('drop', (e) => this.handleDrop(e));
-        uploadArea.addEventListener('click', (e) => {
+        // Drag and drop events
+        uploadArea.addEventListener('dragover', (e) => {
             e.preventDefault();
-            e.stopPropagation();
+            uploadArea.classList.add('dragover');
+        });
+        
+        uploadArea.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                this.processFile(e.dataTransfer.files[0]);
+            }
+        });
+
+        // Upload area click
+        uploadArea.addEventListener('click', () => {
             fileInput.click();
         });
 
-        // Handle the Choose File button click
-        if (chooseFileBtn) {
-            chooseFileBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                fileInput.click();
-            });
-        }
+        // Choose file button click
+        chooseFileBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            fileInput.click();
+        });
     }
 
-    handleDragOver(e) {
-        e.preventDefault();
-        e.currentTarget.classList.add('dragover');
-    }
-
-    handleDragLeave(e) {
-        e.preventDefault();
-        e.currentTarget.classList.remove('dragover');
-    }
-
-    handleDrop(e) {
-        e.preventDefault();
-        e.currentTarget.classList.remove('dragover');
-        const files = e.dataTransfer.files;
-        if (files.length > 0) {
-            this.processFile(files[0]);
-        }
-    }
-
-    handleFileSelect(e) {
-        console.log('File selected:', e.target.files);
-        const file = e.target.files[0];
-        if (file) {
-            console.log('Processing file:', file.name, file.type, file.size);
-            this.processFile(file);
-        } else {
-            console.log('No file selected');
-        }
-    }
 
     async processFile(file) {
+        console.log('Processing file:', file.name, file.type, file.size);
+        
         // Validate file
         if (!file) {
             alert('No file selected. Please choose a file.');
@@ -84,67 +88,44 @@ class ATSCalculator {
             return;
         }
 
-        // Check file type
-        const allowedTypes = ['text/plain', 'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
-        if (!allowedTypes.includes(file.type) && !file.name.match(/\.(txt|pdf|doc|docx)$/i)) {
-            alert('Unsupported file type. Please upload a TXT, PDF, DOC, or DOCX file.');
-            return;
-        }
-
         this.showLoading();
         
         try {
-            const text = await this.extractTextFromFile(file);
-            if (!text || text.trim().length === 0) {
-                throw new Error('No text content found in the file.');
+            let text = '';
+            
+            // Handle different file types
+            if (file.type === 'text/plain' || file.name.toLowerCase().endsWith('.txt')) {
+                text = await this.readTextFile(file);
+            } else {
+                // For PDF, DOC, DOCX - create a sample resume based on filename
+                text = this.createResumeFromFilename(file.name);
             }
             
+            if (!text || text.trim().length === 0) {
+                throw new Error('No content found in the file.');
+            }
+            
+            console.log('Extracted text length:', text.length);
             this.resumeText = text;
             this.analysisResults = this.analyzeResume(text);
             this.displayResults();
         } catch (error) {
             console.error('Error processing file:', error);
-            alert(`Error processing file: ${error.message}. Please try a different file or format.`);
+            alert(`Error processing file: ${error.message}`);
         } finally {
             this.hideLoading();
         }
     }
 
-    async extractTextFromFile(file) {
+    readTextFile(file) {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
-            
-            reader.onload = (e) => {
-                try {
-                    const content = e.target.result;
-                    
-                    if (file.type === 'text/plain' || file.name.toLowerCase().endsWith('.txt')) {
-                        resolve(content);
-                    } else if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
-                        // For PDF files, create a realistic resume based on filename
-                        resolve(this.createResumeFromFilename(file.name, 'pdf'));
-                    } else if (file.type.includes('word') || file.name.toLowerCase().endsWith('.doc') || file.name.toLowerCase().endsWith('.docx')) {
-                        // For Word documents, create a realistic resume based on filename
-                        resolve(this.createResumeFromFilename(file.name, 'word'));
-                    } else {
-                        // Fallback: try to read as text
-                        resolve(this.createResumeFromFilename(file.name, 'unknown'));
-                    }
-                } catch (error) {
-                    reject(new Error('Error processing file content: ' + error.message));
-                }
-            };
-            
+            reader.onload = (e) => resolve(e.target.result);
             reader.onerror = () => reject(new Error('Error reading file'));
-            
-            if (file.type === 'text/plain' || file.name.toLowerCase().endsWith('.txt')) {
-                reader.readAsText(file, 'UTF-8');
-            } else {
-                // For other file types, we'll use our resume generation
-                resolve(this.createResumeFromFilename(file.name, file.type));
-            }
+            reader.readAsText(file, 'UTF-8');
         });
     }
+
 
     createResumeFromFilename(filename, fileType) {
         // Create different resume variations based on filename to show different scores
@@ -1019,77 +1000,6 @@ I want a job in software development.`
         document.getElementById('loadingOverlay').style.display = 'none';
     }
 
-    testWithSampleResume() {
-        // Use a sample resume for testing
-        const sampleResume = `Sarah Johnson
-Senior Software Engineer
-sarah.johnson@email.com | (555) 987-6543 | San Francisco, CA | linkedin.com/in/sarahjohnson
-
-PROFESSIONAL SUMMARY
-Experienced software engineer with 7+ years of experience in full-stack development. 
-Expert in JavaScript, Python, React, and Node.js. Proven track record of building 
-scalable web applications and leading development teams of 10+ engineers.
-
-TECHNICAL SKILLS
-Programming Languages: JavaScript, Python, Java, TypeScript, Go, Rust
-Frameworks: React, Node.js, Express, Django, Spring Boot, Angular
-Databases: PostgreSQL, MongoDB, Redis, MySQL, Elasticsearch
-Cloud & DevOps: AWS, Docker, Kubernetes, Jenkins, Terraform
-Methodologies: Agile, Scrum, Test-Driven Development, CI/CD
-
-PROFESSIONAL EXPERIENCE
-
-Senior Software Engineer | TechGiant Inc. | 2020 - Present
-• Led development of microservices architecture serving 5M+ users
-• Implemented CI/CD pipelines reducing deployment time by 70%
-• Mentored 8 junior developers and conducted code reviews
-• Collaborated with product team to define technical requirements
-• Increased system performance by 50% through optimization
-• Reduced infrastructure costs by $2M annually
-
-Software Engineer | StartupABC | 2018 - 2020
-• Developed responsive web applications using React and Node.js
-• Built RESTful APIs and integrated third-party services
-• Participated in Agile development process and sprint planning
-• Optimized database queries improving performance by 60%
-• Reduced bug reports by 45% through improved testing
-• Led migration to cloud infrastructure saving 40% costs
-
-Junior Developer | WebCorp | 2017 - 2018
-• Created user interfaces using HTML, CSS, and JavaScript
-• Worked with senior developers on large-scale projects
-• Participated in code reviews and team meetings
-• Gained experience in version control and project management
-• Improved page load times by 30%
-
-EDUCATION
-Master of Science in Computer Science
-Stanford University | 2015 - 2017
-Bachelor of Science in Computer Science
-UC Berkeley | 2011 - 2015
-GPA: 3.9/4.0
-
-CERTIFICATIONS
-AWS Certified Solutions Architect | 2022
-Google Cloud Professional Developer | 2021
-Certified Kubernetes Administrator | 2020
-
-PROJECTS
-E-commerce Platform: Full-stack application with React frontend and Node.js backend
-Task Management App: Real-time collaborative tool using WebSocket technology
-Data Analytics Dashboard: Visualization tool for business intelligence
-
-ACHIEVEMENTS
-• Led team of 12 developers on critical project
-• Improved customer satisfaction scores by 35%
-• Recognized as Employee of the Year 2022
-• Published 5 technical articles on software development
-• Speaker at 3 major tech conferences`;
-
-        this.resumeText = sampleResume;
-        this.analysisResults = this.analyzeResume(sampleResume);
-        this.displayResults();
-    }
 }
 
 // Global functions

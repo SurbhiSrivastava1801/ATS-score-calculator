@@ -131,13 +131,6 @@ body {
     box-shadow: 0 10px 20px rgba(40, 167, 69, 0.3);
 }
 
-.test-btn {
-    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
-}
-
-.test-btn:hover {
-    box-shadow: 0 10px 20px rgba(255, 107, 107, 0.3);
-}
 
 /* Analysis Section */
 .analysis-section {
