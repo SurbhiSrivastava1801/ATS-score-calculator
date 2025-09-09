@@ -1009,10 +1009,91 @@ function analyzeNewResume() {
     document.getElementById('fileInput').value = '';
 }
 
-// Test function to verify JavaScript is working
-function testJavaScript() {
-    console.log('JavaScript is working!');
-    alert('JavaScript is working! File upload should work now.');
+// Simple global functions for GitHub Pages compatibility
+function handleFileSelect(input) {
+    console.log('File selected:', input.files);
+    if (input.files && input.files[0]) {
+        if (window.atsCalculator) {
+            window.atsCalculator.processFile(input.files[0]);
+        } else {
+            alert('ATS Calculator not loaded. Please refresh the page.');
+        }
+    }
+}
+
+function testWithSampleResume() {
+    const sampleResume = `Sarah Johnson
+Senior Software Engineer
+sarah.johnson@email.com | (555) 987-6543 | San Francisco, CA | linkedin.com/in/sarahjohnson
+
+PROFESSIONAL SUMMARY
+Experienced software engineer with 7+ years of experience in full-stack development. 
+Expert in JavaScript, Python, React, and Node.js. Proven track record of building 
+scalable web applications and leading development teams of 10+ engineers.
+
+TECHNICAL SKILLS
+Programming Languages: JavaScript, Python, Java, TypeScript, Go, Rust
+Frameworks: React, Node.js, Express, Django, Spring Boot, Angular
+Databases: PostgreSQL, MongoDB, Redis, MySQL, Elasticsearch
+Cloud & DevOps: AWS, Docker, Kubernetes, Jenkins, Terraform
+Methodologies: Agile, Scrum, Test-Driven Development, CI/CD
+
+PROFESSIONAL EXPERIENCE
+
+Senior Software Engineer | TechGiant Inc. | 2020 - Present
+• Led development of microservices architecture serving 5M+ users
+• Implemented CI/CD pipelines reducing deployment time by 70%
+• Mentored 8 junior developers and conducted code reviews
+• Collaborated with product team to define technical requirements
+• Increased system performance by 50% through optimization
+• Reduced infrastructure costs by $2M annually
+
+Software Engineer | StartupABC | 2018 - 2020
+• Developed responsive web applications using React and Node.js
+• Built RESTful APIs and integrated third-party services
+• Participated in Agile development process and sprint planning
+• Optimized database queries improving performance by 60%
+• Reduced bug reports by 45% through improved testing
+• Led migration to cloud infrastructure saving 40% costs
+
+Junior Developer | WebCorp | 2017 - 2018
+• Created user interfaces using HTML, CSS, and JavaScript
+• Worked with senior developers on large-scale projects
+• Participated in code reviews and team meetings
+• Gained experience in version control and project management
+• Improved page load times by 30%
+
+EDUCATION
+Master of Science in Computer Science
+Stanford University | 2015 - 2017
+Bachelor of Science in Computer Science
+UC Berkeley | 2011 - 2015
+GPA: 3.9/4.0
+
+CERTIFICATIONS
+AWS Certified Solutions Architect | 2022
+Google Cloud Professional Developer | 2021
+Certified Kubernetes Administrator | 2020
+
+PROJECTS
+E-commerce Platform: Full-stack application with React frontend and Node.js backend
+Task Management App: Real-time collaborative tool using WebSocket technology
+Data Analytics Dashboard: Visualization tool for business intelligence
+
+ACHIEVEMENTS
+• Led team of 12 developers on critical project
+• Improved customer satisfaction scores by 35%
+• Recognized as Employee of the Year 2022
+• Published 5 technical articles on software development
+• Speaker at 3 major tech conferences`;
+
+    if (window.atsCalculator) {
+        window.atsCalculator.resumeText = sampleResume;
+        window.atsCalculator.analysisResults = window.atsCalculator.analyzeResume(sampleResume);
+        window.atsCalculator.displayResults();
+    } else {
+        alert('ATS Calculator not loaded. Please refresh the page.');
+    }
 }
 
 function downloadReport() {
@@ -1058,18 +1139,30 @@ function generateReport() {
 }
 
 // Initialize the calculator when the page loads
-document.addEventListener('DOMContentLoaded', () => {
-    console.log('DOM loaded, initializing ATS Calculator');
-    window.atsCalculator = new ATSCalculator();
-});
+function initializeCalculator() {
+    console.log('Initializing ATS Calculator');
+    try {
+        window.atsCalculator = new ATSCalculator();
+        console.log('ATS Calculator initialized successfully');
+    } catch (error) {
+        console.error('Error initializing ATS Calculator:', error);
+    }
+}
+
+// Multiple initialization methods for GitHub Pages compatibility
+document.addEventListener('DOMContentLoaded', initializeCalculator);
 
 // Also initialize if DOM is already loaded
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-        console.log('DOM loaded, initializing ATS Calculator');
-        window.atsCalculator = new ATSCalculator();
-    });
+    document.addEventListener('DOMContentLoaded', initializeCalculator);
 } else {
-    console.log('DOM already loaded, initializing ATS Calculator');
-    window.atsCalculator = new ATSCalculator();
+    initializeCalculator();
 }
+
+// Fallback initialization after a short delay
+setTimeout(() => {
+    if (!window.atsCalculator) {
+        console.log('Fallback initialization');
+        initializeCalculator();
+    }
+}, 1000);

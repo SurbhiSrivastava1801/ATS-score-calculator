@@ -30,13 +30,13 @@
                         <h3>Upload Your Resume</h3>
                         <p>Drop your resume file here or click to browse</p>
                         <p class="file-types">Supported formats: PDF, DOC, DOCX, TXT</p>
-                        <input type="file" id="fileInput" accept=".pdf,.doc,.docx,.txt" hidden onchange="if(window.atsCalculator) window.atsCalculator.processFile(this.files[0])">
+                        <input type="file" id="fileInput" accept=".pdf,.doc,.docx,.txt" hidden onchange="handleFileSelect(this)">
                         <div class="upload-buttons">
-                            <button class="upload-btn" id="chooseFileBtn" onclick="document.getElementById('fileInput').click()">
+                            <button class="upload-btn" onclick="document.getElementById('fileInput').click()">
                                 Choose File
                             </button>
-                            <button class="upload-btn test-js-btn" onclick="testJavaScript()" style="background: #28a745;">
-                                Test JavaScript
+                            <button class="upload-btn" onclick="testWithSampleResume()" style="background: #28a745;">
+                                Test with Sample Resume
                             </button>
                         </div>
                     </div>
@@ -103,7 +103,7 @@
 
         <!-- Footer -->
         <footer class="footer">
-            <p>&copy; 2024 ATS Score Calculator. Built to help job seekers optimize their resumes.</p>
+            <p>&copy; 2025 ATS Score Calculator. Built to help job seekers optimize their resumes.</p>
         </footer>
     </div>
 
