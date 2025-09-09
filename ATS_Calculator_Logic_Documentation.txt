@@ -1,0 +1,710 @@
+ATS SCORE CALCULATOR - COMPLETE LOGIC DOCUMENTATION
+=====================================================
+
+Created: 2025
+Author: ATS Score Calculator Team
+Repository: https://github.com/SurbhiSrivastava1801/ATS-score-calculator
+
+TABLE OF CONTENTS
+=================
+1. Overall System Architecture
+2. File Processing Flow
+3. ATS Analysis Engine (8 Criteria)
+4. Detailed Analysis Criteria
+5. Score Calculation Process
+6. Score Interpretation
+7. Industry Keyword Analysis
+8. Recommendation Generation
+9. User Interface Flow
+10. Complete Data Flow
+11. Key Logic Summary
+12. Technical Implementation Details
+
+=====================================================
+1. OVERALL SYSTEM ARCHITECTURE
+=====================================================
+
+┌─────────────────────────────────────────────────────────────────┐
+│                    ATS SCORE CALCULATOR                        │
+├─────────────────────────────────────────────────────────────────┤
+│  USER UPLOADS FILE → TEXT EXTRACTION → ANALYSIS → DISPLAY      │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────┐    ┌──────────────┐    ┌─────────────┐    ┌─────────────┐
+│   FILE      │───▶│    TEXT      │───▶│  ANALYSIS   │───▶│   RESULTS   │
+│  UPLOAD     │    │ EXTRACTION   │    │  ENGINE     │    │  DISPLAY    │
+└─────────────┘    └──────────────┘    └─────────────┘    └─────────────┘
+
+The application uses a global function-based architecture (no classes) for maximum 
+compatibility with GitHub Pages. The main flow is:
+handleFileSelect() → processFileDirectly() → analyzeAndDisplay() → displayResults()
+
+=====================================================
+2. FILE PROCESSING FLOW
+=====================================================
+
+User Clicks "Choose File"
+           │
+           ▼
+┌─────────────────────┐
+│   File Selected?    │
+└─────────────────────┘
+           │
+           ▼ (Yes)
+┌─────────────────────┐
+│  Show Loading       │
+│  Overlay            │
+└─────────────────────┘
+           │
+           ▼
+┌─────────────────────┐
+│  File Type Check    │
+└─────────────────────┘
+           │
+    ┌──────┴──────┐
+    ▼             ▼
+┌─────────┐   ┌─────────┐
+│  TXT    │   │ PDF/DOC │
+│ File    │   │ File    │
+└─────────┘   └─────────┘
+    │             │
+    ▼             ▼
+┌─────────┐   ┌─────────┐
+│ Read    │   │Generate │
+│ Direct  │   │ Sample  │
+│ Text    │   │ Resume  │
+└─────────┘   └─────────┘
+    │             │
+    └──────┬──────┘
+           ▼
+┌─────────────────────┐
+│   Start Analysis    │
+└─────────────────────┘
+
+FILE TYPE HANDLING LOGIC:
+- TXT files: Read directly using FileReader API
+- PDF/DOC/DOCX files: Generate sample resume based on filename hash
+- Sample resumes: 4 different quality levels (50%-98% scores)
+
+=====================================================
+3. ATS ANALYSIS ENGINE (8 CRITERIA)
+=====================================================
+
+┌─────────────────────────────────────────────────────────────────┐
+│                    ATS ANALYSIS ENGINE                         │
+├─────────────────────────────────────────────────────────────────┤
+
+Resume Text Input
+        │
+        ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                   8 ANALYSIS CRITERIA                          │
+├─────────────────────────────────────────────────────────────────┤
+
+┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐
+│ 1. FORMAT   │ │ 2. KEYWORDS │ │ 3. CONTACT  │ │ 4. EXPERIENCE│
+│   (20%)     │ │   (20%)     │ │   (20%)     │ │   (20%)     │
+└─────────────┘ └─────────────┘ └─────────────┘ └─────────────┘
+
+┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐
+│ 5. EDUCATION│ │ 6. SKILLS   │ │ 7. LENGTH   │ │ 8. ACHIEVE  │
+│   (20%)     │ │   (20%)     │ │   (20%)     │ │   (20%)     │
+└─────────────┘ └─────────────┘ └─────────────┘ └─────────────┘
+
+        │         │         │         │         │         │         │         │
+        ▼         ▼         ▼         ▼         ▼         ▼         ▼         ▼
+┌─────────────────────────────────────────────────────────────────┐
+│              SCORE CALCULATION (Average of 8)                  │
+└─────────────────────────────────────────────────────────────────┘
+
+Each criterion is weighted equally (12.5% each) and scored 0-100 points.
+The overall ATS score is the average of all 8 individual scores.
+
+=====================================================
+4. DETAILED ANALYSIS CRITERIA
+=====================================================
+
+4.1 FORMATTING & STRUCTURE ANALYSIS
+┌─────────────────────────────────────────────────────────────────┐
+│                FORMATTING & STRUCTURE ANALYSIS                 │
+├─────────────────────────────────────────────────────────────────┤
+
+Resume Text
+    │
+    ├─ Line Breaks? ──────────────┐
+    ├─ Bullet Points? ────────────┤
+    ├─ Consistent Headers? ───────┤
+    ├─ Standard Sections? ────────┤
+    └─ ATS-Friendly Chars? ───────┤
+                                  │
+                                  ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  SCORE: 0-100 (20 points each)                                 │
+│  • Line breaks: 20 pts                                         │
+│  • Bullet points: 20 pts                                       │
+│  • Headers: 20 pts                                             │
+│  • Sections: 20 pts                                            │
+│  • Clean chars: 20 pts                                         │
+└─────────────────────────────────────────────────────────────────┘
+
+DETAILED LOGIC:
+- Line Breaks: Checks for '\n' characters (20 pts)
+- Bullet Points: Looks for '•', '-', or '*' (20 pts)
+- Consistent Headers: ALL CAPS headers 3-30 chars (20 pts)
+- Standard Sections: Must include 'experience', 'education', 'skills' (20 pts)
+- ATS-Friendly: No special chars like {}, [], symbols (20 pts)
+
+4.2 KEYWORD OPTIMIZATION ANALYSIS
+┌─────────────────────────────────────────────────────────────────┐
+│                KEYWORD OPTIMIZATION ANALYSIS                   │
+├─────────────────────────────────────────────────────────────────┤
+
+Resume Text
+    │
+    ├─ "experience" ──────────────┐
+    ├─ "skills" ──────────────────┤
+    ├─ "education" ───────────────┤
+    ├─ "achievement" ─────────────┤
+    ├─ "leadership" ──────────────┤
+    ├─ "management" ──────────────┤
+    ├─ "communication" ───────────┤
+    ├─ "problem solving" ─────────┤
+    ├─ "teamwork" ────────────────┤
+    ├─ "project management" ──────┤
+    ├─ "analytical" ──────────────┤
+    ├─ "strategic" ───────────────┤
+    └─ "customer service" ────────┤
+                                  │
+                                  ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  SCORE: Keyword Count × 7 (Max 100)                           │
+│  • 0-4 keywords: 0-28 pts                                     │
+│  • 5-7 keywords: 35-49 pts                                    │
+│  • 8-10 keywords: 56-70 pts                                   │
+│  • 11-14 keywords: 77-98 pts                                  │
+│  • 15+ keywords: 100 pts                                      │
+└─────────────────────────────────────────────────────────────────┘
+
+4.3 CONTACT INFORMATION ANALYSIS
+┌─────────────────────────────────────────────────────────────────┐
+│                CONTACT INFORMATION ANALYSIS                    │
+├─────────────────────────────────────────────────────────────────┤
+
+Resume Text
+    │
+    ├─ Email Address? ────────────┐
+    ├─ Phone Number? ─────────────┤
+    ├─ Location Info? ────────────┤
+    └─ Professional Links? ───────┤
+                                  │
+                                  ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  SCORE: 0-100 (25 points each)                                │
+│  • Email: 25 pts (regex: /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/) │
+│  • Phone: 25 pts (regex: /\(?([0-9]{3})\)?[-. ]?([0-9]{3})[-. ]?([0-9]{4})/) │
+│  • Location: 25 pts (keywords: city, state, address, location) │
+│  • Links: 25 pts (linkedin, github, portfolio, website)       │
+└─────────────────────────────────────────────────────────────────┘
+
+4.4 PROFESSIONAL EXPERIENCE ANALYSIS
+┌─────────────────────────────────────────────────────────────────┐
+│                PROFESSIONAL EXPERIENCE ANALYSIS                │
+├─────────────────────────────────────────────────────────────────┤
+
+Resume Text
+    │
+    ├─ Experience Section? ───────┐
+    ├─ Job Titles? ───────────────┤
+    ├─ Company Names? ────────────┤
+    └─ Employment Dates? ─────────┤
+                                  │
+                                  ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  SCORE: 0-100 (weighted)                                      │
+│  • Experience section: 30 pts                                 │
+│  • Job titles: 25 pts (engineer, manager, analyst, etc.)      │
+│  • Company names: 25 pts (inc, corp, llc, company, etc.)      │
+│  • Employment dates: 20 pts (19xx or 20xx years)              │
+└─────────────────────────────────────────────────────────────────┘
+
+4.5 EDUCATION ANALYSIS
+┌─────────────────────────────────────────────────────────────────┐
+│                    EDUCATION ANALYSIS                          │
+├─────────────────────────────────────────────────────────────────┤
+
+Resume Text
+    │
+    ├─ Education Section? ────────┐
+    ├─ Degree Information? ───────┤
+    └─ Institution Names? ────────┤
+                                  │
+                                  ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  SCORE: 0-100 (weighted)                                      │
+│  • Education section: 40 pts                                  │
+│  • Degree info: 30 pts (bachelor, master, phd, etc.)          │
+│  • Institution: 30 pts (university, college, institute, etc.) │
+└─────────────────────────────────────────────────────────────────┘
+
+4.6 SKILLS & COMPETENCIES ANALYSIS
+┌─────────────────────────────────────────────────────────────────┐
+│                SKILLS & COMPETENCIES ANALYSIS                 │
+├─────────────────────────────────────────────────────────────────┤
+
+Resume Text
+    │
+    ├─ Skills Section? ───────────┐
+    ├─ Technical Skills? ─────────┤
+    └─ Soft Skills? ──────────────┤
+                                  │
+                                  ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  SCORE: 0-100 (weighted)                                      │
+│  • Skills section: 40 pts                                     │
+│  • Technical skills: 30 pts (programming, software, etc.)     │
+│  • Soft skills: 30 pts (communication, leadership, etc.)      │
+└─────────────────────────────────────────────────────────────────┘
+
+4.7 RESUME LENGTH ANALYSIS
+┌─────────────────────────────────────────────────────────────────┐
+│                    RESUME LENGTH ANALYSIS                      │
+├─────────────────────────────────────────────────────────────────┤
+
+Resume Text
+    │
+    └─ Word Count ────────────────┐
+                                  │
+                                  ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  SCORE: 0-100 (based on word count)                          │
+│  • 300-800 words: 100 pts (optimal)                           │
+│  • 200-299 words: 80 pts (too short)                          │
+│  • 801-1200 words: 70 pts (too long)                          │
+│  • 1200+ words: 40 pts (way too long)                         │
+│  • <200 words: 30 pts (very short)                            │
+└─────────────────────────────────────────────────────────────────┘
+
+4.8 ACHIEVEMENTS & IMPACT ANALYSIS
+┌─────────────────────────────────────────────────────────────────┐
+│                ACHIEVEMENTS & IMPACT ANALYSIS                 │
+├─────────────────────────────────────────────────────────────────┤
+
+Resume Text
+    │
+    ├─ Quantified Achievements? ──┐
+    ├─ Action Verbs? ─────────────┤
+    └─ Results Keywords? ─────────┤
+                                  │
+                                  ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  SCORE: 0-100 (weighted)                                      │
+│  • Quantified achievements: 40 pts (numbers, %, $, etc.)      │
+│  • Action verbs: 30 pts (achieved, increased, improved, etc.) │
+│  • Results keywords: 30 pts (result, impact, success, etc.)   │
+└─────────────────────────────────────────────────────────────────┘
+
+=====================================================
+5. SCORE CALCULATION PROCESS
+=====================================================
+
+┌─────────────────────────────────────────────────────────────────┐
+│                    SCORE CALCULATION                           │
+├─────────────────────────────────────────────────────────────────┤
+
+┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐
+│ Formatting  │ │ Keywords    │ │ Contact     │ │ Experience  │
+│    Score    │ │   Score     │ │   Score     │ │   Score     │
+│     85      │ │     92      │ │     100     │ │     78      │
+└─────────────┘ └─────────────┘ └─────────────┘ └─────────────┘
+
+┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐
+│ Education   │ │ Skills      │ │ Length      │ │ Achieve     │
+│   Score     │ │   Score     │ │   Score     │ │   Score     │
+│     95      │ │     88      │ │     100     │ │     82      │
+└─────────────┘ └─────────────┘ └─────────────┘ └─────────────┘
+
+        │         │         │         │         │         │         │         │
+        ▼         ▼         ▼         ▼         ▼         ▼         ▼         ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  OVERALL SCORE = (85+92+100+78+95+88+100+82) ÷ 8 = 90%        │
+└─────────────────────────────────────────────────────────────────┘
+
+CALCULATION FORMULA:
+Overall Score = (Score1 + Score2 + Score3 + Score4 + Score5 + Score6 + Score7 + Score8) ÷ 8
+
+Each criterion contributes equally to the final score (12.5% weight each).
+
+=====================================================
+6. SCORE INTERPRETATION
+=====================================================
+
+┌─────────────────────────────────────────────────────────────────┐
+│                    SCORE INTERPRETATION                        │
+├─────────────────────────────────────────────────────────────────┤
+
+┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐
+│   95-100%   │ │   85-94%    │ │   70-84%    │ │   0-69%     │
+│             │ │             │ │             │ │             │
+│ EXCELLENT   │ │    GOOD     │ │    FAIR     │ │    POOR     │
+│             │ │             │ │             │ │             │
+│ 🟢 Green    │ │ 🟡 Yellow   │ │ 🟠 Orange   │ │ 🔴 Red      │
+└─────────────┘ └─────────────┘ └─────────────┘ └─────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│  MESSAGES:                                                      │
+│  • 95%+: "Excellent! Highly optimized for ATS systems"         │
+│  • 85%+: "Good foundation, room for improvement"               │
+│  • 70%+: "Fair score, needs improvements"                      │
+│  • <70%: "Poor score, significant improvements needed"         │
+└─────────────────────────────────────────────────────────────────┘
+
+=====================================================
+7. INDUSTRY KEYWORD ANALYSIS
+=====================================================
+
+┌─────────────────────────────────────────────────────────────────┐
+│                INDUSTRY KEYWORD ANALYSIS                       │
+├─────────────────────────────────────────────────────────────────┤
+
+Resume Text
+    │
+    ├─ Software Keywords ─────────┐
+    │  (JavaScript, Python, React) │
+    ├─ Marketing Keywords ────────┤
+    │  (SEO, Analytics, Campaigns) │
+    ├─ Finance Keywords ──────────┤
+    │  (Excel, Budgeting, Analysis)│
+    ├─ Healthcare Keywords ───────┤
+    │  (Patient Care, HIPAA, EMR)  │
+    └─ General Keywords ──────────┤
+       (Leadership, Management)    │
+                                  │
+                                  ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  INDUSTRY MATCH PERCENTAGES:                                   │
+│  • Software: 75% (12/16 keywords found)                       │
+│  • Marketing: 40% (6/15 keywords found)                       │
+│  • Finance: 20% (3/15 keywords found)                         │
+│  • Healthcare: 0% (0/12 keywords found)                       │
+│  • General: 60% (9/15 keywords found)                         │
+└─────────────────────────────────────────────────────────────────┘
+
+INDUSTRY KEYWORD CATEGORIES:
+
+SOFTWARE (22 keywords):
+programming, development, coding, software engineering, algorithms, 
+data structures, API, database, frontend, backend, full-stack, 
+JavaScript, Python, Java, React, Node.js, Git, Agile, DevOps, 
+cloud computing, machine learning, AI
+
+MARKETING (15 keywords):
+digital marketing, SEO, SEM, social media, content marketing, 
+brand management, analytics, campaign management, lead generation, 
+conversion optimization, email marketing, PPC, Google Analytics, 
+HubSpot, Salesforce
+
+FINANCE (15 keywords):
+financial analysis, budgeting, forecasting, risk management, 
+investment, portfolio management, compliance, auditing, accounting, 
+financial modeling, Excel, SAP, QuickBooks, GAAP, IFRS
+
+HEALTHCARE (12 keywords):
+patient care, medical, healthcare, clinical, diagnosis, treatment, 
+HIPAA, EMR, EHR, pharmaceutical, nursing, physician, healthcare administration
+
+GENERAL (15 keywords):
+leadership, management, communication, problem solving, teamwork, 
+project management, analytical, strategic planning, customer service, 
+sales, negotiation, presentation, Microsoft Office, Excel, PowerPoint, Word
+
+=====================================================
+8. RECOMMENDATION GENERATION
+=====================================================
+
+┌─────────────────────────────────────────────────────────────────┐
+│                RECOMMENDATION GENERATION                       │
+├─────────────────────────────────────────────────────────────────┤
+
+Overall Score + Individual Scores
+    │
+    ├─ Score < 70% ──────────────┐
+    │  "Major Improvements Needed" │
+    ├─ Score 70-84% ─────────────┤
+    │  "Good Foundation, Improve"  │
+    ├─ Score 85-94% ─────────────┤
+    │  "Almost There!"            │
+    └─ Score 95%+ ───────────────┤
+       "Excellent!"               │
+                                  │
+                                  ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  CATEGORY-SPECIFIC RECOMMENDATIONS:                            │
+│  • Low Formatting Score → "Use bullet points, consistent headers" │
+│  • Low Keyword Score → "Add industry-specific keywords"        │
+│  • Low Contact Score → "Include email, phone, location"        │
+│  • Low Experience Score → "Add job titles, companies, dates"   │
+│  • Low Education Score → "Include degree, institution"         │
+│  • Low Skills Score → "List technical and soft skills"         │
+│  • Low Length Score → "Optimize to 300-800 words"             │
+│  • Low Achievement Score → "Add numbers, percentages, metrics" │
+└─────────────────────────────────────────────────────────────────┘
+
+RECOMMENDATION PRIORITY LEVELS:
+- HIGH: Score < 70% in any category
+- MEDIUM: Overall score < 95%
+- LOW: Minor improvements needed
+
+=====================================================
+9. USER INTERFACE FLOW
+=====================================================
+
+┌─────────────────────────────────────────────────────────────────┐
+│                    USER INTERFACE FLOW                         │
+├─────────────────────────────────────────────────────────────────┤
+
+┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
+│   UPLOAD    │───▶│   LOADING   │───▶│  ANALYSIS   │───▶│   RESULTS   │
+│   SCREEN    │    │   SCREEN    │    │   SCREEN    │    │   SCREEN    │
+└─────────────┘    └─────────────┘    └─────────────┘    └─────────────┘
+       │                   │                   │                   │
+       │                   │                   │                   │
+       ▼                   ▼                   ▼                   ▼
+┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
+│ • Choose    │    │ • Spinner   │    │ • Progress  │    │ • Score     │
+│   File      │    │ • "Analyzing│    │   Bar       │    │   Circle    │
+│ • Drag &    │    │   resume..."│    │ • Steps     │    │ • Breakdown │
+│   Drop      │    │             │    │ • Details   │    │ • Keywords  │
+│ • File      │    │             │    │             │    │ • Recommend │
+│   Types     │    │             │    │             │    │ • Download  │
+└─────────────┘    └─────────────┘    └─────────────┘    └─────────────┘
+
+UI COMPONENTS:
+1. UPLOAD SCREEN:
+   - File input (hidden)
+   - Choose File button
+   - Drag & drop area
+   - Supported file types display
+
+2. LOADING SCREEN:
+   - Animated spinner
+   - "Analyzing your resume..." message
+   - Overlay covering entire screen
+
+3. ANALYSIS SCREEN:
+   - Progress indicators
+   - Step-by-step analysis display
+   - Real-time score updates
+
+4. RESULTS SCREEN:
+   - Circular score display with animation
+   - Detailed breakdown grid
+   - Industry keyword analysis
+   - Recommendations list
+   - Action buttons (Analyze Another, Download Report)
+
+=====================================================
+10. COMPLETE DATA FLOW
+=====================================================
+
+┌─────────────────────────────────────────────────────────────────┐
+│                    COMPLETE DATA FLOW                          │
+├─────────────────────────────────────────────────────────────────┤
+
+USER ACTION
+    │
+    ▼
+┌─────────────┐
+│ File Upload │
+└─────────────┘
+    │
+    ▼
+┌─────────────┐
+│ Text Extract│
+└─────────────┘
+    │
+    ▼
+┌─────────────┐
+│ 8 Criteria  │
+│ Analysis    │
+└─────────────┘
+    │
+    ▼
+┌─────────────┐
+│ Score Calc  │
+└─────────────┘
+    │
+    ▼
+┌─────────────┐
+│ Industry    │
+│ Keywords    │
+└─────────────┘
+    │
+    ▼
+┌─────────────┐
+│ Recommend   │
+│ Generate    │
+└─────────────┘
+    │
+    ▼
+┌─────────────┐
+│ Display     │
+│ Results     │
+└─────────────┘
+    │
+    ▼
+┌─────────────┐
+│ User Can    │
+│ Download    │
+│ Report      │
+└─────────────┘
+
+DETAILED DATA FLOW:
+
+1. USER ACTION:
+   - User clicks "Choose File" button
+   - File dialog opens
+   - User selects resume file
+
+2. FILE UPLOAD:
+   - File validation (type, size)
+   - Loading overlay displayed
+   - File processing initiated
+
+3. TEXT EXTRACTION:
+   - TXT files: Direct text reading via FileReader API
+   - Other files: Sample resume generation based on filename hash
+
+4. 8 CRITERIA ANALYSIS:
+   - Formatting & Structure analysis
+   - Keyword optimization analysis
+   - Contact information analysis
+   - Professional experience analysis
+   - Education analysis
+   - Skills & competencies analysis
+   - Resume length analysis
+   - Achievements & impact analysis
+
+5. SCORE CALCULATION:
+   - Individual scores calculated (0-100 each)
+   - Overall score = average of 8 individual scores
+   - Score interpretation and messaging
+
+6. INDUSTRY KEYWORDS:
+   - Cross-reference with 5 industry keyword sets
+   - Calculate match percentages
+   - Identify missing keywords
+
+7. RECOMMENDATION GENERATION:
+   - Overall score-based recommendations
+   - Category-specific recommendations
+   - Priority-based suggestions
+
+8. DISPLAY RESULTS:
+   - Animated score display
+   - Detailed breakdown grid
+   - Keyword analysis display
+   - Recommendations list
+   - Action buttons
+
+9. DOWNLOAD REPORT:
+   - Extract all displayed data
+   - Generate comprehensive text report
+   - Create downloadable file
+
+=====================================================
+11. KEY LOGIC SUMMARY
+=====================================================
+
+CORE PRINCIPLES:
+1. TRANSPARENCY: Every score is explained with specific issues and suggestions
+2. COMPREHENSIVE: Covers all major ATS evaluation criteria
+3. ACTIONABLE: Provides specific, implementable recommendations
+4. INDUSTRY-AWARE: Analyzes keywords across multiple industries
+5. USER-FRIENDLY: Clear visual feedback and downloadable reports
+6. ROBUST: Handles various file types and error conditions gracefully
+
+SCORING METHODOLOGY:
+- 8 equally weighted criteria (12.5% each)
+- Each criterion scored 0-100 points
+- Overall score = average of all individual scores
+- Transparent calculation process displayed to user
+
+ANALYSIS DEPTH:
+- Formatting: Structure, headers, bullet points, special characters
+- Keywords: 13 common resume keywords
+- Contact: Email, phone, location, professional links
+- Experience: Section, job titles, companies, dates
+- Education: Section, degree, institution
+- Skills: Section, technical skills, soft skills
+- Length: Word count optimization (300-800 words ideal)
+- Achievements: Quantified results, action verbs, impact keywords
+
+INDUSTRY ANALYSIS:
+- 5 industry categories with 12-22 keywords each
+- Percentage match calculation for each industry
+- Missing keyword identification
+- Industry-specific recommendations
+
+RECOMMENDATION SYSTEM:
+- Score-based priority levels (High/Medium/Low)
+- Category-specific improvement suggestions
+- Actionable, specific advice
+- Always includes general optimization tips
+
+=====================================================
+12. TECHNICAL IMPLEMENTATION DETAILS
+=====================================================
+
+ARCHITECTURE:
+- Global function-based (no classes)
+- GitHub Pages compatible
+- Pure JavaScript (no external dependencies)
+- Responsive HTML/CSS design
+
+FILE HANDLING:
+- FileReader API for text files
+- Hash-based sample generation for other formats
+- Error handling and validation
+- Loading states and user feedback
+
+ANALYSIS ENGINE:
+- Regex patterns for email/phone validation
+- String matching for keyword detection
+- Word counting for length analysis
+- Pattern recognition for formatting
+
+DISPLAY SYSTEM:
+- DOM manipulation for dynamic content
+- CSS animations for score display
+- Responsive grid layouts
+- Color-coded score indicators
+
+REPORT GENERATION:
+- Blob API for file creation
+- Dynamic content extraction
+- Structured text formatting
+- Automatic download functionality
+
+ERROR HANDLING:
+- Try-catch blocks for file operations
+- User-friendly error messages
+- Graceful degradation
+- Loading state management
+
+PERFORMANCE:
+- Efficient string operations
+- Minimal DOM updates
+- Optimized regex patterns
+- Fast calculation algorithms
+
+=====================================================
+END OF DOCUMENTATION
+=====================================================
+
+This documentation provides a complete understanding of the ATS Score Calculator's 
+logic, implementation, and functionality. The system is designed to be transparent, 
+comprehensive, and user-friendly while providing actionable insights for resume 
+optimization.
+
+For technical support or questions, please refer to the GitHub repository:
+https://github.com/SurbhiSrivastava1801/ATS-score-calculator
